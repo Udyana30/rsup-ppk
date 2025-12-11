@@ -81,15 +81,6 @@ export function Header() {
               </div>
 
               <Link 
-                href="/dashboard/settings"
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#41A67E] transition-all"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <Settings className="h-4 w-4" />
-                Pengaturan Akun
-              </Link>
-              
-              <Link 
                 href="/dashboard/profile"
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#41A67E] transition-all"
                 onClick={() => setIsDropdownOpen(false)}

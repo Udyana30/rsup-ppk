@@ -6,6 +6,7 @@ import { MasterDataTable } from './master-data-table'
 import { GroupFormModal } from './modal/group-form-modal'
 import { useMasterGroups } from '@/hooks/use-master-groups'
 import { MedicalStaffGroup } from '@/types'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 
 const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
 
@@ -16,6 +17,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MedicalStaffGroup | undefined>(undefined)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     setData(initialData)
@@ -31,8 +33,12 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
-    await deleteGroup(id)
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return
+    const success = await deleteGroup(deleteId)
+    if (success) {
+        setDeleteId(null)
+    }
   }
 
   return (
@@ -44,7 +50,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
         setSearch={setSearch}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={(id) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Deskripsi"
       />
@@ -59,6 +65,17 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
           onSuccess={() => setIsModalOpen(false)} 
         />
       </Modal>
+
+      <AlertDialog
+        isOpen={!!deleteId}
+        title="Hapus KSM"
+        description="Apakah Anda yakin ingin menghapus kelompok staf medis ini?"
+        confirmLabel="Hapus"
+        variant="destructive"
+        isProcessing={isProcessing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteId(null)}
+      />
     </>
   )
 }

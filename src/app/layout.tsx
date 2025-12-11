@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { AuthProvider } from '@/contexts/auth-context'
+import { ToastProvider } from '@/contexts/toast-context'
 
 export const dynamic = 'force-dynamic'
 const inter = Inter({ subsets: ['latin'] })
@@ -24,7 +25,9 @@ export default function RootLayout({
     <html lang="id">
       <body className={cn(inter.className, 'bg-gray-50 text-gray-900 antialiased')}>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

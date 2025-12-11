@@ -6,6 +6,7 @@ import { MasterDataTable } from './master-data-table'
 import { TypeFormModal } from './modal/type-form-modal'
 import { useMasterTypes } from '@/hooks/use-master-types'
 import { PpkType } from '@/types'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 
 const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
 
@@ -16,6 +17,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<PpkType | undefined>(undefined)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     setData(initialData)
@@ -31,10 +33,13 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
-    await deleteType(id)
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return
+    const success = await deleteType(deleteId)
+    if (success) {
+        setDeleteId(null)
+    }
   }
-
 
   return (
     <>
@@ -45,7 +50,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
         setSearch={setSearch}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={(id) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Kode"
       />
@@ -60,6 +65,17 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
           onSuccess={() => setIsModalOpen(false)} 
         />
       </Modal>
+
+      <AlertDialog
+        isOpen={!!deleteId}
+        title="Hapus Tipe Dokumen"
+        description="Apakah Anda yakin ingin menghapus tipe dokumen ini?"
+        confirmLabel="Hapus"
+        variant="destructive"
+        isProcessing={isProcessing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteId(null)}
+      />
     </>
   )
 }

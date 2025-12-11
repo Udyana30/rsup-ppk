@@ -113,9 +113,7 @@ export function MasterDataTable({
                         size="sm" 
                         variant="destructive"
                         disabled={isProcessing}
-                        onClick={() => {
-                          if (confirm('Apakah anda yakin ingin menghapus data ini?')) onDelete(item.id)
-                        }}
+                        onClick={() => onDelete(item.id)}
                         className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
                         title="Hapus"
                       >

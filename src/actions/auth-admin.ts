@@ -40,6 +40,35 @@ export async function adminCreateUser(formData: { username: string, fullName: st
   return { success: true, tempPassword: password, username: username }
 }
 
+export async function adminUpdateUser(userId: string, data: { fullName?: string, role?: string, isActive?: boolean }) {
+  const { error: profileError } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      full_name: data.fullName,
+      role: data.role,
+      is_active: data.isActive
+    })
+    .eq('id', userId)
+
+  if (profileError) {
+    return { success: false, error: profileError.message }
+  }
+
+  const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      full_name: data.fullName,
+      role: data.role
+    },
+    ban_duration: data.isActive === false ? '876000h' : 'none'
+  })
+
+  if (authError) {
+    return { success: false, error: authError.message }
+  }
+
+  return { success: true }
+}
+
 export async function adminDeleteUser(userId: string) {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
   

@@ -7,6 +7,7 @@ import { useDocumentActions } from '@/hooks/use-document-actions'
 import { PpkDocument } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 import { DocumentFilters } from '@/components/features/documents/document-filters'
 import { Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, Loader2, User } from 'lucide-react'
 
@@ -40,6 +41,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
   
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingDoc, setEditingDoc] = useState<PpkDocument | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     setDocuments(initialDocuments)
@@ -65,14 +67,13 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
     return matchSearch && matchGroup && matchType && matchStatus && matchDate
   })
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    if (confirm('Apakah Anda yakin ingin menghapus dokumen ini beserta filenya secara permanen?')) {
-      const success = await deleteDocument(id)
-      if (success) {
-        setDocuments(prev => prev.filter(doc => doc.id !== id))
-        router.refresh()
-      }
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return
+    const success = await deleteDocument(deleteId)
+    if (success) {
+      setDocuments(prev => prev.filter(doc => doc.id !== deleteId))
+      setDeleteId(null)
+      router.refresh()
     }
   }
 
@@ -186,12 +187,14 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                       <Button 
                         size="sm" 
                         variant="destructive"
-                        onClick={(e) => handleDelete(e, doc.id)}
-                        disabled={isProcessing}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteId(doc.id)
+                        }}
                         className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
                         title="Hapus"
                       >
-                        {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </td>
@@ -231,6 +234,17 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
           />
         </Modal>
       )}
+
+      <AlertDialog
+        isOpen={!!deleteId}
+        title="Hapus Dokumen"
+        description="Apakah Anda yakin ingin menghapus dokumen ini beserta filenya secara permanen?"
+        confirmLabel="Ya, Hapus"
+        variant="destructive"
+        isProcessing={isProcessing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }

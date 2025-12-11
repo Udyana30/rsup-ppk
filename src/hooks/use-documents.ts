@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/contexts/toast-context'
 
 export function useDocuments() {
   const [documents, setDocuments] = useState<PpkDocument[]>([])
@@ -11,6 +12,7 @@ export function useDocuments() {
   
   const { user, loading: authLoading } = useAuth()
   const supabase = createClient()
+  const { toast } = useToast()
 
   const fetchDocuments = useCallback(async () => {
     if (!user) return
@@ -31,8 +33,21 @@ export function useDocuments() {
     try {
       await documentService.deleteDocument(supabase, id)
       setDocuments((prev) => prev.filter((doc) => doc.id !== id))
+      
+      toast({
+        title: 'Berhasil',
+        message: 'Dokumen berhasil dihapus',
+        type: 'success'
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete document')
+      const message = err instanceof Error ? err.message : 'Failed to delete document'
+      setError(message)
+      
+      toast({
+        title: 'Gagal',
+        message: 'Gagal menghapus dokumen',
+        type: 'error'
+      })
       throw err
     }
   }

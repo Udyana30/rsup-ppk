@@ -10,6 +10,7 @@ import { useDocumentActions } from '@/hooks/use-document-actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 import { EditDocumentModal } from '@/components/features/documents/modal/edit-document-modal'
 import { DocumentHistoryModal } from '@/components/features/documents/modal/document-history-modal'
 import { 
@@ -30,6 +31,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   
   const fetchDoc = async () => {
     try {
@@ -42,9 +44,11 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
     }
   }
 
-  const handleDelete = async () => {
-    if (confirm('Apakah Anda yakin ingin menghapus dokumen ini secara permanen?')) {
-      await deleteDocument(documentId)
+  const handleDeleteConfirm = async () => {
+    const success = await deleteDocument(documentId)
+    if (success) {
+        setIsDeleteDialogOpen(false)
+        router.push('/dashboard/documents')
     }
   }
 
@@ -152,7 +156,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           </div>
 
           <Button 
-            onClick={handleDelete}
+            onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isProcessing}
             variant="destructive" 
             className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
@@ -203,6 +207,17 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           />
         )}
       </Modal>
+
+      <AlertDialog
+        isOpen={isDeleteDialogOpen}
+        title="Hapus Dokumen"
+        description="Apakah Anda yakin ingin menghapus dokumen ini secara permanen?"
+        confirmLabel="Hapus Permanen"
+        variant="destructive"
+        isProcessing={isProcessing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+      />
     </div>
   )
 }

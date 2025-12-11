@@ -4,12 +4,14 @@ import { createClient } from '@/lib/supabase/client'
 import { masterService } from '@/services/master.service'
 import { useMasterData } from '@/contexts/master-data-context'
 import { PpkTypeInsert, PpkTypeUpdate } from '@/types'
+import { useToast } from '@/contexts/toast-context'
 
 export function useMasterTypes() {
   const [isProcessing, setIsProcessing] = useState(false)
   const supabase = createClient()
   const router = useRouter()
   const { refreshMasterData } = useMasterData()
+  const { toast } = useToast()
 
   const createType = async (data: PpkTypeInsert) => {
     setIsProcessing(true)
@@ -19,9 +21,11 @@ export function useMasterTypes() {
       
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'Tipe dokumen berhasil ditambahkan', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menambahkan tipe dokumen', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -36,9 +40,11 @@ export function useMasterTypes() {
 
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'Tipe dokumen berhasil diperbarui', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal memperbarui tipe dokumen', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -53,9 +59,11 @@ export function useMasterTypes() {
 
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'Tipe dokumen berhasil dihapus', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menghapus tipe dokumen', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)

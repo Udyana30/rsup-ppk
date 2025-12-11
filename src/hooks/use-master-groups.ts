@@ -4,12 +4,14 @@ import { createClient } from '@/lib/supabase/client'
 import { masterService } from '@/services/master.service'
 import { useMasterData } from '@/contexts/master-data-context'
 import { MedicalStaffGroupInsert, MedicalStaffGroupUpdate } from '@/types'
+import { useToast } from '@/contexts/toast-context'
 
 export function useMasterGroups() {
   const [isProcessing, setIsProcessing] = useState(false)
   const supabase = createClient()
   const router = useRouter()
   const { refreshMasterData } = useMasterData()
+  const { toast } = useToast()
 
   const createGroup = async (data: MedicalStaffGroupInsert) => {
     setIsProcessing(true)
@@ -19,9 +21,11 @@ export function useMasterGroups() {
       
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'KSM berhasil ditambahkan', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menambah KSM', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -36,9 +40,11 @@ export function useMasterGroups() {
 
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'KSM berhasil diperbarui', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal update KSM', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -53,9 +59,11 @@ export function useMasterGroups() {
 
       await refreshMasterData()
       router.refresh()
+      toast({ title: 'Berhasil', message: 'KSM berhasil dihapus', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menghapus KSM', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)

@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { adminDeleteUser } from '@/actions/auth-admin'
 import { Profile } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { AlertDialog } from '@/components/ui/alert-dialog'
+import { useUserActions } from '@/hooks/use-user-actions'
 import { UserFilters } from '@/components/features/users/user-filters'
-import { Plus, User, Shield, Pencil, Trash2, AlertCircle, UserCircle } from 'lucide-react'
+import { Plus, User, Shield, Pencil, Trash2, AlertCircle, UserCircle, Loader2 } from 'lucide-react'
 
 const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
 const CreateUserModal = dynamic(() => import('@/components/features/users/modal/create-user-modal').then(mod => mod.CreateUserModal))
@@ -21,11 +22,14 @@ interface UsersClientViewProps {
 
 export function UsersClientView({ initialUsers, currentUser }: UsersClientViewProps) {
   const router = useRouter()
+  const { deleteUser, isProcessing } = useUserActions()
+  
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const filteredUsers = initialUsers.filter(u => {
     const isNotMe = u.id !== currentUser.id
@@ -36,11 +40,10 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
     return isNotMe && matchSearch && matchRole
   })
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Yakin ingin menghapus user ini secara permanen?')) {
-      await adminDeleteUser(id)
-      router.refresh()
-    }
+  const handleDeleteConfirm = async () => {
+    if (!deleteId) return
+    const success = await deleteUser(deleteId)
+    if (success) setDeleteId(null)
   }
 
   const canManageUser = (targetUser: Profile) => {
@@ -131,7 +134,8 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                       <Button 
                         size="sm" 
                         variant="destructive"
-                        onClick={() => handleDelete(u.id)}
+                        onClick={() => setDeleteId(u.id)}
+                        disabled={isProcessing}
                         className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -185,6 +189,17 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
           />
         </Modal>
       )}
+
+      <AlertDialog
+        isOpen={!!deleteId}
+        title="Hapus User"
+        description="Yakin ingin menghapus user ini secara permanen? Akun yang dihapus tidak dapat dipulihkan."
+        confirmLabel="Hapus Permanen"
+        variant="destructive"
+        isProcessing={isProcessing}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }

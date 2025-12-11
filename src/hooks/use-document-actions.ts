@@ -4,17 +4,15 @@ import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { storageService } from '@/services/storage.service'
 import { PpkDocument } from '@/types'
+import { useToast } from '@/contexts/toast-context'
 
 export function useDocumentActions() {
   const [isProcessing, setIsProcessing] = useState(false)
   const supabase = createClient()
   const router = useRouter()
+  const { toast } = useToast()
 
-  const editMetadata = async (
-    id: string, 
-    data: any, 
-    newFile: File | null
-  ) => {
+  const editMetadata = async (id: string, data: any, newFile: File | null) => {
     setIsProcessing(true)
     try {
       let fileData = {}
@@ -33,20 +31,19 @@ export function useDocumentActions() {
 
       if (error) throw error
       router.refresh()
+      
+      toast({ title: 'Berhasil', message: 'Metadata dokumen diperbarui', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal memperbarui dokumen', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
     }
   }
 
-  const createNewVersion = async (
-    oldDoc: PpkDocument, 
-    newData: any, 
-    newFile: File | null
-  ) => {
+  const createNewVersion = async (oldDoc: PpkDocument, newData: any, newFile: File | null) => {
     setIsProcessing(true)
     try {
       let fileUrl = oldDoc.file_url
@@ -75,9 +72,11 @@ export function useDocumentActions() {
       if (error) throw error
 
       router.refresh()
+      toast({ title: 'Berhasil', message: `Versi ${nextVersion} diterbitkan`, type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal update versi', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -91,9 +90,11 @@ export function useDocumentActions() {
       if (error) throw error
       
       router.refresh()
+      toast({ title: 'Berhasil', message: 'Versi dokumen dipulihkan', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal restore versi', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
@@ -104,9 +105,12 @@ export function useDocumentActions() {
     setIsProcessing(true)
     try {
       await documentService.deleteDocument(supabase, documentId)
+      
+      toast({ title: 'Berhasil', message: 'Dokumen dihapus permanen', type: 'success' })
       return true
     } catch (error) {
       console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menghapus dokumen', type: 'error' })
       return false
     } finally {
       setIsProcessing(false)
