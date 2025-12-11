@@ -1,13 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { userService } from '@/services/user.service'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Profile } from '@/types'
-import { Loader2, Shield, User, CheckCircle2, XCircle } from 'lucide-react'
+import { ProfileForm } from './forms/profile-form'
+import { PasswordResetForm } from './forms/password-reset'
+import { ChevronDown, LockKeyhole } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EditUserModalProps {
@@ -17,91 +14,50 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ user, currentUser, onSuccess }: EditUserModalProps) {
-  const router = useRouter()
-  const supabase = createClient()
-  const [isLoading, setIsLoading] = useState(false)
-  
-  const [fullName, setFullName] = useState(user.full_name || '')
-  const [role, setRole] = useState<'admin' | 'user'>((user.role as 'admin' | 'user') || 'user')
-  const [isActive, setIsActive] = useState(user.is_active ?? true)
-
-  const canEditRole = currentUser.is_super_admin === true
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      await userService.updateUser(supabase, user.id, {
-        full_name: fullName,
-        role: role,
-        is_active: isActive
-      })
-      router.refresh()
-      onSuccess()
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false)
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-900">Nama Lengkap</label>
-        <div className="relative">
-          <Input 
-            required
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="pl-11 h-12 border-gray-300 bg-white text-base font-medium text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
+    <div className="flex flex-col gap-6">
+      <section>
+        <ProfileForm 
+          user={user} 
+          currentUser={currentUser} 
+          onSuccess={onSuccess} 
+        />
+      </section>
+
+      <section className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIsPasswordOpen(!isPasswordOpen)}
+          className="flex w-full items-center justify-between bg-gray-50/50 p-4 text-left transition-colors hover:bg-gray-50"
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+              isPasswordOpen ? "bg-orange-100 text-orange-600" : "bg-gray-200 text-gray-500"
+            )}>
+              <LockKeyhole className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-gray-900">Keamanan & Password</span>
+              <span className="text-xs font-medium text-gray-500">Klik untuk mereset password user</span>
+            </div>
+          </div>
+          <ChevronDown 
+            className={cn(
+              "h-5 w-5 text-gray-400 transition-transform duration-200",
+              isPasswordOpen && "rotate-180"
+            )} 
           />
-          <User className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-500" />
-        </div>
-      </div>
+        </button>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-900">Role Akses</label>
-        <div className="relative">
-          <select
-            disabled={!canEditRole}
-            className="h-12 w-full appearance-none rounded-md border border-gray-300 bg-white pl-11 px-4 text-base font-medium text-gray-900 disabled:bg-gray-100 disabled:text-gray-500 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
-            value={role}
-            onChange={(e) => setRole(e.target.value as 'admin' | 'user')} 
-          >
-            <option value="user">User (Dokter/Staff)</option>
-            <option value="admin">Admin</option>
-          </select>
-          <Shield className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-500" />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-900">Status Akun</label>
-        <div 
-          onClick={() => setIsActive(!isActive)}
-          className={cn(
-            "flex h-12 w-full cursor-pointer items-center justify-between rounded-lg border px-4 transition-all",
-            isActive 
-              ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]" 
-              : "border-gray-300 bg-gray-50 text-gray-500"
-          )}
-        >
-          <span className="font-bold text-base">{isActive ? 'Aktif (Bisa Login)' : 'Dibekukan (Tidak Bisa Login)'}</span>
-          {isActive ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
-        </div>
-      </div>
-
-      <div className="pt-4">
-        <Button 
-          type="submit" 
-          disabled={isLoading}
-          className="w-full h-12 bg-[#41A67E] hover:bg-[#368f6b] text-base font-bold text-white shadow-md"
-        >
-          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Simpan Perubahan'}
-        </Button>
-      </div>
-    </form>
+        {isPasswordOpen && (
+          <div className="border-t border-gray-200 p-4 animate-in slide-in-from-top-2 fade-in duration-200">
+            <PasswordResetForm userId={user.id} />
+          </div>
+        )}
+      </section>
+    </div>
   )
 }

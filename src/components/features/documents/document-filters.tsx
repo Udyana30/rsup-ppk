@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, X } from 'lucide-react'
+import { Search, Filter, X, Calendar, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useCategories } from '@/hooks/use-categories'
@@ -79,59 +79,74 @@ export function DocumentFilters({
             
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Mulai Tanggal</label>
-              <Input 
-                  type="date" 
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E]" 
-              />
+              <div className="relative">
+                <Input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                />
+                <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Sampai Tanggal</label>
-              <Input 
-                  type="date" 
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E]" 
-              />
+              <div className="relative">
+                <Input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                />
+                <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Status</label>
-              <select
-                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">Semua Status</option>
-                <option value="active">Aktif (Published)</option>
-                <option value="inactive">Non-Aktif (Archived)</option>
-              </select>
+              <div className="relative">
+                <select
+                  className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-white pl-3 pr-10 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">Semua Status</option>
+                  <option value="active">Aktif (Published)</option>
+                  <option value="inactive">Non-Aktif (Archived)</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Kelompok Staff Medis</label>
-              <select
-                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
-                value={groupFilter}
-                onChange={(e) => setGroupFilter(e.target.value)}
-              >
-                <option value="">Semua KSM</option>
-                {groups.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
-              </select>
+              <div className="relative">
+                <select
+                  className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-white pl-3 pr-10 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
+                  value={groupFilter}
+                  onChange={(e) => setGroupFilter(e.target.value)}
+                >
+                  <option value="">Semua KSM</option>
+                  {groups.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Jenis Dokumen</label>
-              <select
-                className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <option value="">Semua Jenis</option>
-                {types.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
+              <div className="relative">
+                <select
+                  className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-white pl-3 pr-10 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <option value="">Semua Jenis</option>
+                  {types.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              </div>
             </div>
           </div>
           

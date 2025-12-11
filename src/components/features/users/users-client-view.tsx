@@ -8,7 +8,7 @@ import { Profile } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserFilters } from '@/components/features/users/user-filters'
-import { Plus, User, Shield, Pencil, Trash2, AlertCircle } from 'lucide-react'
+import { Plus, User, Shield, Pencil, Trash2, AlertCircle, UserCircle } from 'lucide-react'
 
 const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
 const CreateUserModal = dynamic(() => import('@/components/features/users/modal/create-user-modal').then(mod => mod.CreateUserModal))
@@ -29,7 +29,8 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
 
   const filteredUsers = initialUsers.filter(u => {
     const isNotMe = u.id !== currentUser.id
-    const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = u.full_name?.toLowerCase().includes(search.toLowerCase()) || 
+                       u.username?.toLowerCase().includes(search.toLowerCase())
     const matchRole = roleFilter ? u.role === roleFilter : true
     
     return isNotMe && matchSearch && matchRole
@@ -80,9 +81,9 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
           <thead className="bg-gray-50 text-gray-700">
             <tr>
               <th className="px-6 py-4 font-bold">Nama User</th>
+              <th className="px-6 py-4 font-bold">Username / NIP</th>
               <th className="px-6 py-4 font-bold">Role</th>
               <th className="px-6 py-4 font-bold">Status</th>
-              <th className="px-6 py-4 font-bold">Tanggal Bergabung</th>
               <th className="px-6 py-4 text-right font-bold">Aksi</th>
             </tr>
           </thead>
@@ -100,6 +101,12 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                   </div>
                 </td>
                 <td className="px-6 py-4">
+                  <div className="flex items-center gap-2 text-gray-600 font-medium">
+                    <UserCircle className="h-4 w-4 text-gray-400" />
+                    {u.username || '-'}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2 text-gray-700 font-bold capitalize">
                     <Shield className="h-4 w-4 text-gray-400" />
                     {u.role}
@@ -110,9 +117,6 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                     {u.is_active !== false ? 'Aktif' : 'Dibekukan'}
                   </Badge>
                 </td>
-                <td className="px-6 py-4 text-gray-900 font-medium">
-                  {new Date(u.created_at).toLocaleDateString('id-ID', { dateStyle: 'medium' })}
-                </td>
                 <td className="px-6 py-4 text-right">
                   {canManageUser(u) && (
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -120,7 +124,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                         size="sm" 
                         variant="outline" 
                         onClick={() => setEditingUser(u)}
-                        className="h-8 w-8 p-0 border-gray-300 hover:text-[#41A67E] hover:border-[#41A67E]"
+                        className="h-8 w-8 p-0 text-[#41A67E] border-[#41A67E]"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -142,7 +146,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                 <td colSpan={5} className="p-10 text-center text-gray-500">
                   <div className="flex flex-col items-center gap-3">
                     <AlertCircle className="h-10 w-10 text-gray-300" />
-                    <span className="font-medium">Tidak ada user lain ditemukan</span>
+                    <span className="font-medium">Tidak ada user ditemukan</span>
                   </div>
                 </td>
               </tr>

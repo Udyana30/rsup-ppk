@@ -30,6 +30,17 @@ export const documentService = {
       .single()
   },
 
+  async getDocumentVersions(client: SupabaseClient<Database>, documentId: string) {
+    return client
+      .from('ppk_document_versions')
+      .select(`
+        *,
+        profiles:archived_by (full_name)
+      `)
+      .eq('document_id', documentId)
+      .order('archived_at', { ascending: false })
+  },
+
   async createDocument(
     client: SupabaseClient<Database>,
     data: DocumentInsert
@@ -55,27 +66,24 @@ export const documentService = {
   },
 
   async deleteDocument(client: SupabaseClient<Database>, id: string) {
-    return client
-      .from('ppk_documents')
-      .delete()
-      .eq('id', id)
+    const { data, error } = await client.functions.invoke('delete-document', {
+      body: { documentId: id }
+    })
+
+    if (error) throw error
+    return data
   },
 
-  async archiveDocument(client: SupabaseClient<Database>, id: string) {
-    return client
-      .from('ppk_documents')
-      .update({ is_active: false })
-      .eq('id', id)
-  },
-
-  async getCategories(client: SupabaseClient<Database>) {
-    return Promise.all([
-      client
-        .from('medical_staff_groups')
-        .select('*')
-        .eq('is_active', true)
-        .order('name'),
-      client.from('ppk_types').select('*').order('name'),
-    ])
-  },
+  async restoreVersion(
+    client: SupabaseClient<Database>, 
+    documentId: string, 
+    versionId: string,
+    userId: string
+  ) {
+    return client.rpc('restore_document_version', {
+      p_document_id: documentId,
+      p_version_id: versionId,
+      p_user_id: userId
+    })
+  }
 }

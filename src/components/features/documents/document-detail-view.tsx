@@ -1,57 +1,51 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
+import { useAuth } from '@/hooks/use-auth'
+import { useDocumentActions } from '@/hooks/use-document-actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { EditDocumentModal } from '@/components/features/documents/modal/edit-document-modal'
+import { DocumentHistoryModal } from '@/components/features/documents/modal/document-history-modal'
 import { 
   ArrowLeft, Calendar, FileText, User, Tag, 
-  Pencil, History, Trash2, AlertCircle, Loader2 
+  Pencil, Trash2, AlertCircle, Loader2, GitBranch, FileClock
 } from 'lucide-react'
 
-export function DocumentDetailView({ documentId }: { documentId: string }) {
+interface DocumentDetailViewProps {
+  documentId: string
+  initialDocument: PpkDocument | null
+}
+
+export function DocumentDetailView({ documentId, initialDocument }: DocumentDetailViewProps) {
   const router = useRouter()
   const supabase = createClient()
-  const [document, setDocument] = useState<PpkDocument | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  // State Modal
-  const [modalMode, setModalMode] = useState<'edit' | 'version' | null>(null)
+  const { user } = useAuth() 
+  const { deleteDocument, isProcessing } = useDocumentActions()
 
+  const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
+  const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
+  
   const fetchDoc = async () => {
     try {
       const { data, error } = await documentService.getDocumentById(supabase, documentId)
       if (error) throw error
       setDocument(data as unknown as PpkDocument)
+      router.refresh() 
     } catch (e) {
       console.error(e)
-    } finally {
-      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    fetchDoc()
-  }, [documentId])
 
   const handleDelete = async () => {
     if (confirm('Apakah Anda yakin ingin menghapus dokumen ini secara permanen?')) {
-      await documentService.deleteDocument(supabase, documentId)
-      router.push('/dashboard/documents')
+      await deleteDocument(documentId)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#41A67E]" />
-      </div>
-    )
   }
 
   if (!document) {
@@ -59,6 +53,7 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
       <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <h3 className="text-xl font-bold text-gray-900">Dokumen Tidak Ditemukan</h3>
+        <p className="text-gray-500">Pastikan Anda memiliki akses atau dokumen belum dihapus.</p>
         <Button onClick={() => router.back()} variant="outline">Kembali</Button>
       </div>
     )
@@ -66,7 +61,6 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
 
   return (
     <div className="flex h-[calc(100vh-100px)] flex-col gap-6 lg:flex-row">
-      {/* SIDEBAR */}
       <div className="flex w-full flex-col gap-6 lg:w-[400px] lg:shrink-0">
         <Button 
           variant="outline" 
@@ -78,8 +72,8 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
         </Button>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#41A67E]/10 text-[#41A67E]">
+          <div className="mb-4 flex items-start gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FileText className="h-6 w-6" />
             </div>
             <div>
@@ -92,6 +86,12 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
               </div>
             </div>
           </div>
+
+          {document.description && (
+            <div className="mb-4 text-sm leading-relaxed text-gray-600">
+              {document.description}
+            </div>
+          )}
 
           <div className="space-y-5 border-t border-gray-100 pt-5">
             <div className="space-y-1">
@@ -123,33 +123,46 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
         <div className="flex flex-col gap-3">
           <Button 
             onClick={() => setModalMode('edit')}
-            className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-md hover:bg-[#368f6b]"
+            disabled={isProcessing}
+            className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-sm hover:bg-[#368f6b]"
           >
             <Pencil className="h-5 w-5" />
             Edit Metadata
           </Button>
-          
-          <Button 
-            onClick={() => setModalMode('version')}
-            variant="outline" 
-            className="h-12 w-full justify-start gap-3 border-gray-300 text-base font-medium text-gray-700 hover:bg-gray-50"
-          >
-            <History className="h-5 w-5" />
-            Update Versi File
-          </Button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+                onClick={() => setModalMode('version')}
+                disabled={isProcessing}
+                className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+            >
+                <GitBranch className="h-6 w-6" />
+                Update Versi
+            </Button>
+            
+            <Button 
+                onClick={() => setModalMode('history')}
+                disabled={isProcessing}
+                variant="outline"
+                className="h-20 flex-col gap-2 border-blue-100 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+            >
+                <FileClock className="h-6 w-6" />
+                Lihat Riwayat
+            </Button>
+          </div>
 
           <Button 
             onClick={handleDelete}
+            disabled={isProcessing}
             variant="destructive" 
-            className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100"
+            className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
           >
-            <Trash2 className="h-5 w-5" />
+            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
             Hapus Dokumen
           </Button>
         </div>
       </div>
 
-      {/* PDF PREVIEW (Tanpa Tombol Download Custom) */}
       <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner">
         <object
           data={`${document.file_url}#toolbar=1`} 
@@ -162,24 +175,33 @@ export function DocumentDetailView({ documentId }: { documentId: string }) {
         </object>
       </div>
 
-      {/* MODAL EDIT & VERSI */}
       <Modal
         isOpen={!!modalMode}
         onClose={() => setModalMode(null)}
-        title={modalMode === 'edit' ? 'Edit Dokumen' : 'Perbarui Versi Dokumen'}
+        title={
+          modalMode === 'edit' ? 'Edit Dokumen' : 
+          modalMode === 'version' ? 'Perbarui Versi Dokumen' :
+          'Riwayat Versi Dokumen'
+        }
       >
-        <EditDocumentModal 
-          document={document} 
-          mode={modalMode || 'edit'} 
-          onSuccess={() => {
-            setModalMode(null)
-            if (modalMode === 'version') {
-                router.push('/dashboard/documents') // Balik ke list jika versi baru (karena ID berubah)
-            } else {
-                fetchDoc() // Refresh data jika cuma edit
-            }
-          }} 
-        />
+        {modalMode === 'history' ? (
+          <DocumentHistoryModal 
+            documentId={document.id} 
+            onSuccess={() => {
+              setModalMode(null)
+              fetchDoc()
+            }} 
+          />
+        ) : (
+          <EditDocumentModal 
+            document={document} 
+            mode={modalMode as 'edit' | 'version'} 
+            onSuccess={() => {
+              setModalMode(null)
+              fetchDoc()
+            }} 
+          />
+        )}
       </Modal>
     </div>
   )

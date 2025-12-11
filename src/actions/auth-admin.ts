@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { ENV } from '@/constants/config'
+import { formatUsernameToEmail } from '@/lib/auth-helpers'
 
 const supabaseAdmin = createClient(
   ENV.SUPABASE_URL,
@@ -14,8 +15,9 @@ const supabaseAdmin = createClient(
   }
 )
 
-export async function adminCreateUser(formData: any) {
-  const email = formData.email
+export async function adminCreateUser(formData: { username: string, fullName: string, role: string }) {
+  const username = formData.username
+  const email = formatUsernameToEmail(username)
   const password = Math.random().toString(36).slice(-8)
   const fullName = formData.fullName
   const role = formData.role
@@ -26,7 +28,8 @@ export async function adminCreateUser(formData: any) {
     email_confirm: true,
     user_metadata: {
       full_name: fullName,
-      role: role
+      role: role,
+      username: username 
     }
   })
 
@@ -34,7 +37,7 @@ export async function adminCreateUser(formData: any) {
     return { success: false, error: authError.message }
   }
 
-  return { success: true, tempPassword: password }
+  return { success: true, tempPassword: password, username: username }
 }
 
 export async function adminDeleteUser(userId: string) {
@@ -44,5 +47,17 @@ export async function adminDeleteUser(userId: string) {
     return { success: false, error: error.message }
   }
   
+  return { success: true }
+}
+
+export async function adminResetPassword(userId: string, newPassword: string) {
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    password: newPassword
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
   return { success: true }
 }

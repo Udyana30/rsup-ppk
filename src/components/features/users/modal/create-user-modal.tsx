@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { adminCreateUser } from '@/actions/auth-admin'
 import { Profile } from '@/types'
-import { Loader2, Mail, User, Shield, CheckCircle } from 'lucide-react'
+import { Loader2, UserCircle, User, Shield, CheckCircle } from 'lucide-react'
 
 interface CreateUserModalProps {
   currentUser: Profile
@@ -14,10 +14,10 @@ interface CreateUserModalProps {
 
 export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [tempResult, setTempResult] = useState<{email: string, pass: string} | null>(null)
+  const [tempResult, setTempResult] = useState<{username: string, pass: string} | null>(null)
   
   const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [role, setRole] = useState('user')
 
   const canCreateAdmin = currentUser.is_super_admin === true
@@ -27,10 +27,10 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
     setIsLoading(true)
 
     try {
-      const result = await adminCreateUser({ fullName, email, role })
+      const result = await adminCreateUser({ fullName, username, role })
       
       if (result.success && result.tempPassword) {
-        setTempResult({ email, pass: result.tempPassword })
+        setTempResult({ username: result.username!, pass: result.tempPassword })
       } else {
         alert(result.error)
       }
@@ -50,7 +50,7 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
           </div>
           <h3 className="text-xl font-bold text-green-900">User Berhasil Dibuat</h3>
           <p className="text-sm font-medium text-green-800 mt-2">
-            Email notifikasi berisi password sementara telah dikirimkan ke <strong>{tempResult.email}</strong>.
+            User <strong>{tempResult.username}</strong> telah aktif.
           </p>
         </div>
 
@@ -62,9 +62,6 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
               Copy
             </Button>
           </div>
-          <p className="mt-3 text-xs font-medium text-gray-500">
-            *User wajib mengganti password ini saat login pertama kali.
-          </p>
         </div>
 
         <Button onClick={onSuccess} className="w-full h-12 bg-[#41A67E] hover:bg-[#368f6b] text-base font-bold text-white">
@@ -91,18 +88,18 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-900">Alamat Email</label>
+        <label className="block text-sm font-bold text-gray-900">Username</label>
         <div className="relative">
           <Input 
-            type="email"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="nama@rsup.com"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.replace(/\s/g, '').toLowerCase())}
+            placeholder="nip12345"
             className="pl-11 h-12 border-gray-300 bg-white text-base font-medium text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
           />
-          <Mail className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-500" />
+          <UserCircle className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-500" />
         </div>
+        <p className="text-xs text-gray-500">Gunakan NIP atau ID Staff tanpa spasi.</p>
       </div>
 
       <div className="space-y-2">
@@ -126,7 +123,7 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
           disabled={isLoading}
           className="w-full h-12 bg-[#41A67E] hover:bg-[#368f6b] text-base font-bold text-white shadow-md"
         >
-          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Buat User & Kirim Email'}
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Buat User'}
         </Button>
       </div>
     </form>

@@ -1,0 +1,66 @@
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { masterService } from '@/services/master.service'
+import { useMasterData } from '@/contexts/master-data-context'
+import { PpkTypeInsert, PpkTypeUpdate } from '@/types'
+
+export function useMasterTypes() {
+  const [isProcessing, setIsProcessing] = useState(false)
+  const supabase = createClient()
+  const router = useRouter()
+  const { refreshMasterData } = useMasterData()
+
+  const createType = async (data: PpkTypeInsert) => {
+    setIsProcessing(true)
+    try {
+      const { error } = await masterService.createType(supabase, data)
+      if (error) throw error
+      
+      await refreshMasterData()
+      router.refresh()
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const updateType = async (id: string, data: PpkTypeUpdate) => {
+    setIsProcessing(true)
+    try {
+      const { error } = await masterService.updateType(supabase, id, data)
+      if (error) throw error
+
+      await refreshMasterData()
+      router.refresh()
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const deleteType = async (id: string) => {
+    setIsProcessing(true)
+    try {
+      const { error } = await masterService.deleteType(supabase, id)
+      if (error) throw error
+
+      await refreshMasterData()
+      router.refresh()
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  return { createType, updateType, deleteType, isProcessing }
+}

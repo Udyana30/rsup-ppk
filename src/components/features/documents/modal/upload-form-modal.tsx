@@ -6,7 +6,7 @@ import { useCategories } from '@/hooks/use-categories'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle } from 'lucide-react'
+import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface UploadFormModalProps {
@@ -20,6 +20,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
   
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [validationDate, setValidationDate] = useState('')
   const [groupId, setGroupId] = useState('')
   const [typeId, setTypeId] = useState('')
@@ -32,6 +33,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
     try {
       await uploadDocument(file, {
         title,
+        description,
         group_id: groupId,
         type_id: typeId,
         uploaded_by: user.id,
@@ -59,16 +61,30 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         />
       </div>
 
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Deskripsi (Opsional)</label>
+        <textarea 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          placeholder="Tambahkan ringkasan atau keterangan singkat dokumen..."
+          rows={3}
+          className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#41A67E] focus:outline-none focus:ring-2 focus:ring-[#41A67E]/20"
+        />
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Tanggal Pengesahan</label>
-          <Input 
-            type="date"
-            required 
-            value={validationDate} 
-            onChange={(e) => setValidationDate(e.target.value)} 
-            className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
-          />
+          <div className="relative">
+            <Input 
+              type="date"
+              required 
+              value={validationDate} 
+              onChange={(e) => setValidationDate(e.target.value)} 
+              className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            />
+            <Calendar className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
         </div>
 
         <div className="space-y-2">

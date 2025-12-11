@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Settings, Database } from 'lucide-react'
 import { SidebarItem } from '@/types'
 
 export const MENU_ITEMS: SidebarItem[] = [
@@ -19,6 +19,26 @@ export const MENU_ITEMS: SidebarItem[] = [
     href: '/dashboard/users',
     icon: Users,
     roles: ['admin'],
+  },
+  {
+    title: 'Master Data',
+    href: '/dashboard/master',
+    icon: Database,
+    roles: ['admin'],
+    children: [
+      {
+        title: 'Kelompok Medis',
+        href: '/dashboard/master/groups',
+        icon: undefined,
+        roles: ['admin'],
+      },
+      {
+        title: 'Tipe Dokumen',
+        href: '/dashboard/master/types',
+        icon: undefined,
+        roles: ['admin'],
+      },
+    ]
   },
   {
     title: 'Pengaturan',

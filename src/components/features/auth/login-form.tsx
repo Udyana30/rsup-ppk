@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { useLogin } from '@/hooks/use-login'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, FileText, Eye, EyeOff } from 'lucide-react'
+import { Loader2, FileText, Eye, EyeOff, User } from 'lucide-react'
 
 export function LoginForm() {
   const { handleLogin, isLoading, error } = useLogin()
-  
   const [showPassword, setShowPassword] = useState(false)
 
   return (
@@ -30,21 +29,24 @@ export function LoginForm() {
         <div className="space-y-5">
           <div>
             <label 
-              htmlFor="email" 
+              htmlFor="username" 
               className="mb-1.5 block text-sm font-semibold text-gray-700"
             >
-              Email Address
+              Username
             </label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="nama@rsup.com"
-              className="h-11 border-gray-300 bg-gray-50 px-4 text-sm text-gray-800 shadow-sm transition-all placeholder:text-gray-400 focus:border-[#41A67E] focus:bg-white focus:ring-[#41A67E]"
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                placeholder="nip_user"
+                className="h-11 border-gray-300 bg-gray-50 pl-11 text-sm text-gray-800 shadow-sm transition-all placeholder:text-gray-400 focus:border-[#41A67E] focus:bg-white focus:ring-[#41A67E]"
+                disabled={isLoading}
+              />
+              <User className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
+            </div>
           </div>
 
           <div>
@@ -65,7 +67,6 @@ export function LoginForm() {
                 className="h-11 border-gray-300 bg-gray-50 pl-4 pr-10 text-sm text-gray-800 shadow-sm transition-all placeholder:text-gray-400 focus:border-[#41A67E] focus:bg-white focus:ring-[#41A67E]"
                 disabled={isLoading}
               />
-              
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}

@@ -6,7 +6,7 @@ import { useDocumentActions } from '@/hooks/use-document-actions'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText } from 'lucide-react'
+import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText, Calendar } from 'lucide-react'
 import { PpkDocument } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -23,6 +23,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
 
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState(document.title)
+  const [description, setDescription] = useState(document.description || '')
   const [validationDate, setValidationDate] = useState(document.validation_date || '')
   const [groupId, setGroupId] = useState(document.group_id || '')
   const [typeId, setTypeId] = useState(document.type_id || '')
@@ -39,6 +40,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
 
     const formData = {
       title,
+      description,
       group_id: groupId,
       type_id: typeId,
       validation_date: validationDate,
@@ -90,16 +92,30 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         </div>
       </div>
 
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-900">Deskripsi (Opsional)</label>
+        <textarea 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          placeholder="Tambahkan ringkasan atau keterangan singkat..."
+          rows={3}
+          className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#41A67E] focus:outline-none focus:ring-2 focus:ring-[#41A67E]/20"
+        />
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Tanggal Pengesahan</label>
-          <Input 
-            type="date"
-            required 
-            value={validationDate} 
-            onChange={(e) => setValidationDate(e.target.value)} 
-            className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
-          />
+          <div className="relative">
+            <Input 
+              type="date"
+              required 
+              value={validationDate} 
+              onChange={(e) => setValidationDate(e.target.value)} 
+              className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+            />
+            <Calendar className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          </div>
         </div>
 
         <div className="space-y-2">

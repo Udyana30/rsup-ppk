@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { documentService } from '@/services/document.service'
 import { userService } from '@/services/user.service'
+import { masterService } from '@/services/master.service'
 import { StatsCard } from '@/components/features/dashboard/stats-card'
 import { RecentDocuments } from '@/components/features/dashboard/recent-documents'
 import { RecentUsers } from '@/components/features/dashboard/recent-users'
@@ -9,16 +10,17 @@ import { FileText, Users, Clock, Activity } from 'lucide-react'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const [documentsRes, usersData, categoriesRes] = await Promise.all([
+  const [documentsRes, usersData, groupsRes, typesRes] = await Promise.all([
     documentService.getDocuments(supabase),
     userService.getAllUsers(supabase),
-    documentService.getCategories(supabase)
+    masterService.getGroups(supabase),
+    masterService.getTypes(supabase)
   ])
 
   const documents = documentsRes.data || []
   const users = usersData || []
-  const groups = categoriesRes[0].data || []
-  const types = categoriesRes[1].data || []
+  const groups = groupsRes.data || []
+  const types = typesRes.data || []
 
   return (
     <div className="space-y-6">

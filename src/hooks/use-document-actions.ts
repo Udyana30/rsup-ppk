@@ -60,21 +60,19 @@ export function useDocumentActions() {
 
       const nextVersion = String(Number(oldDoc.version || '1') + 1)
 
-      const { error: createError } = await documentService.createDocument(supabase, {
-        ...newData,
-        title: newData.title || oldDoc.title,
-        group_id: newData.group_id || oldDoc.group_id,
-        type_id: newData.type_id || oldDoc.type_id,
-        uploaded_by: newData.uploaded_by,
-        version: nextVersion,
-        is_active: true,
-        file_url: fileUrl,
-        cloudinary_public_id: publicId
+      const { error } = await supabase.rpc('update_document_version', {
+        p_document_id: oldDoc.id,
+        p_user_id: newData.uploaded_by,
+        p_new_title: newData.title || oldDoc.title,
+        p_new_file_url: fileUrl,
+        p_new_public_id: publicId || '',
+        p_new_version: nextVersion,
+        p_new_description: newData.description || '',
+        p_new_validation_date: newData.validation_date,
+        p_change_log: 'Pembaruan versi dokumen'
       })
 
-      if (createError) throw createError
-
-      await documentService.archiveDocument(supabase, oldDoc.id)
+      if (error) throw error
 
       router.refresh()
       return true
@@ -86,5 +84,34 @@ export function useDocumentActions() {
     }
   }
 
-  return { editMetadata, createNewVersion, isProcessing }
+  const restoreVersion = async (documentId: string, versionId: string, userId: string) => {
+    setIsProcessing(true)
+    try {
+      const { error } = await documentService.restoreVersion(supabase, documentId, versionId, userId)
+      if (error) throw error
+      
+      router.refresh()
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const deleteDocument = async (documentId: string) => {
+    setIsProcessing(true)
+    try {
+      await documentService.deleteDocument(supabase, documentId)
+      return true
+    } catch (error) {
+      console.error(error)
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  return { editMetadata, createNewVersion, restoreVersion, deleteDocument, isProcessing }
 }

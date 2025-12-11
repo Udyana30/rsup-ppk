@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { createClient } from '@/lib/supabase/client'
-import { documentService } from '@/services/document.service'
+import { useDocumentActions } from '@/hooks/use-document-actions'
 import { PpkDocument } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { DocumentFilters } from '@/components/features/documents/document-filters'
-import { Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle } from 'lucide-react'
+import { Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, Loader2, User } from 'lucide-react'
 
 const UploadFormModal = dynamic(() => 
   import('@/components/features/documents/modal/upload-form-modal').then(mod => mod.UploadFormModal)
@@ -29,7 +28,7 @@ interface DocumentsClientViewProps {
 
 export function DocumentsClientView({ initialDocuments }: DocumentsClientViewProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const { deleteDocument, isProcessing } = useDocumentActions()
   
   const [documents, setDocuments] = useState<PpkDocument[]>(initialDocuments)
   const [search, setSearch] = useState('')
@@ -68,13 +67,11 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    if (confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) {
-      try {
-        await documentService.deleteDocument(supabase, id)
+    if (confirm('Apakah Anda yakin ingin menghapus dokumen ini beserta filenya secara permanen?')) {
+      const success = await deleteDocument(id)
+      if (success) {
         setDocuments(prev => prev.filter(doc => doc.id !== id))
         router.refresh()
-      } catch (error) {
-        console.error(error)
       }
     }
   }
@@ -151,7 +148,14 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                         <span className="font-semibold text-gray-900 line-clamp-1 max-w-[300px]">
                             {doc.title}
                         </span>
-                        <span className="text-xs text-gray-500">{doc.ppk_types?.name}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <span>{doc.ppk_types?.name}</span>
+                          <span className="text-gray-300">•</span>
+                          <div className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {doc.profiles?.full_name || 'System'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -183,10 +187,11 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                         size="sm" 
                         variant="destructive"
                         onClick={(e) => handleDelete(e, doc.id)}
+                        disabled={isProcessing}
                         className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
                         title="Hapus"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </Button>
                     </div>
                   </td>

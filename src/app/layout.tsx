@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
+import { AuthProvider } from '@/contexts/auth-context'
 
+export const dynamic = 'force-dynamic'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -21,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className={cn(inter.className, 'bg-gray-50 text-gray-900 antialiased')}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

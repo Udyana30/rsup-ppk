@@ -1,0 +1,64 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import { MasterDataTable } from './master-data-table'
+import { GroupFormModal } from './modal/group-form-modal'
+import { useMasterGroups } from '@/hooks/use-master-groups'
+import { MedicalStaffGroup } from '@/types'
+
+const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
+
+export function GroupsClientView({ initialData }: { initialData: MedicalStaffGroup[] }) {
+  const { deleteGroup, isProcessing } = useMasterGroups()
+  const [data, setData] = useState(initialData)
+  const [search, setSearch] = useState('')
+  
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<MedicalStaffGroup | undefined>(undefined)
+
+  useEffect(() => {
+    setData(initialData)
+  }, [initialData])
+
+  const handleAdd = () => {
+    setEditingItem(undefined)
+    setIsModalOpen(true)
+  }
+
+  const handleEdit = (item: any) => {
+    setEditingItem(item as MedicalStaffGroup)
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    await deleteGroup(id)
+  }
+
+  return (
+    <>
+      <MasterDataTable
+        title="Kelompok Staf Medis"
+        data={data}
+        search={search}
+        setSearch={setSearch}
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isProcessing={isProcessing}
+        extraColumnName="Deskripsi"
+      />
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingItem ? 'Edit Kelompok Medis' : 'Tambah Kelompok Medis'}
+      >
+        <GroupFormModal 
+          initialData={editingItem} 
+          onSuccess={() => setIsModalOpen(false)} 
+        />
+      </Modal>
+    </>
+  )
+}
