@@ -99,7 +99,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                     <thead className="bg-gray-50 text-gray-700 shadow-sm table w-full table-fixed">
                         <tr>
                             <th className={`px-6 py-4 font-bold ${colWidths.name}`}>Nama User</th>
-                            <th className={`px-6 py-4 font-bold ${colWidths.username}`}>Username / NIP</th>
+                            <th className={`px-6 py-4 font-bold ${colWidths.username}`}>Username</th>
                             <th className={`px-6 py-4 font-bold ${colWidths.role}`}>Role</th>
                             <th className={`px-6 py-4 font-bold ${colWidths.status}`}>Status</th>
                             <th className={`px-6 py-4 text-right font-bold ${colWidths.action}`}>Aksi</th>

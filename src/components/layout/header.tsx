@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { User as UserIcon, LogOut, Loader2 } from 'lucide-react'
@@ -21,9 +21,8 @@ export function Header() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false)
 
-  const dropdownRef = useClickOutside<HTMLDivElement>(() =>
-    setIsDropdownOpen(false)
-  )
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  useClickOutside(dropdownRef, () => setIsDropdownOpen(false))
 
   if (pathname === '/dashboard/profile') {
     return null
