@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Profile } from '@/types'
-import { useProfileActions } from '@/hooks/use-profile-actions'
+import { useProfileActions } from '@/hooks/users/use-profile-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { User, Loader2, Save } from 'lucide-react'

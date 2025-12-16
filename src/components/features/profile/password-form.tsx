@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useProfileActions } from '@/hooks/use-profile-actions'
+import { useProfileActions } from '@/hooks/users/use-profile-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Lock, Loader2, Eye, EyeOff } from 'lucide-react'

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { useUpload } from '@/hooks/use-upload'
-import { useCategories } from '@/hooks/use-categories'
-import { useAuth } from '@/hooks/use-auth'
+import { useUpload } from '@/hooks/storage/use-upload'
+import { useCategories } from '@/hooks/master/use-categories'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, Calendar } from 'lucide-react'
@@ -17,7 +17,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
   const { uploadDocument, isUploading } = useUpload()
   const { groups, types } = useCategories()
   const { user } = useAuth()
-  
+
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -52,10 +52,10 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Judul Dokumen PPK</label>
-        <Input 
-          required 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
+        <Input
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Masukkan judul dokumen lengkap..."
           className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#41A67E] focus:ring-[#41A67E]"
         />
@@ -63,9 +63,9 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Deskripsi (Opsional)</label>
-        <textarea 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Tambahkan ringkasan atau keterangan singkat dokumen..."
           rows={3}
           className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#41A67E] focus:outline-none focus:ring-2 focus:ring-[#41A67E]/20"
@@ -76,11 +76,11 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Tanggal Pengesahan</label>
           <div className="relative">
-            <Input 
+            <Input
               type="date"
-              required 
-              value={validationDate} 
-              onChange={(e) => setValidationDate(e.target.value)} 
+              required
+              value={validationDate}
+              onChange={(e) => setValidationDate(e.target.value)}
               className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             />
             <Calendar className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -90,7 +90,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Kelompok Staff Medis</label>
           <div className="relative">
-            <select 
+            <select
               required
               className="h-11 w-full appearance-none rounded-md border border-gray-300 bg-white pl-4 pr-10 text-base text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
               value={groupId}
@@ -108,7 +108,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Jenis Dokumen</label>
           <div className="relative">
-            <select 
+            <select
               required
               className="h-11 w-full appearance-none rounded-md border border-gray-300 bg-white pl-4 pr-10 text-base text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
               value={typeId}
@@ -123,12 +123,12 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Status Dokumen</label>
-          <div 
+          <div
             onClick={() => setIsActive(!isActive)}
             className={cn(
               "flex h-11 w-full cursor-pointer items-center justify-between rounded-md border px-4 transition-all",
-              isActive 
-                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]" 
+              isActive
+                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]"
                 : "border-gray-300 bg-gray-50 text-gray-500"
             )}
           >
@@ -141,12 +141,12 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700">Upload File PDF</label>
         <div className="relative rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition-all hover:border-[#41A67E] hover:bg-[#41A67E]/5">
-          <Input 
-            type="file" 
+          <Input
+            type="file"
             accept="application/pdf"
-            required 
+            required
             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-            onChange={(e) => setFile(e.target.files?.[0] || null)} 
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
           <div className="relative z-0 flex flex-col items-center">
             <div className="mb-3 rounded-full bg-white p-3 shadow-sm ring-1 ring-gray-200">
@@ -170,9 +170,9 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
       </div>
 
       <div className="flex justify-end pt-4">
-        <Button 
-          type="submit" 
-          disabled={isUploading} 
+        <Button
+          type="submit"
+          disabled={isUploading}
           className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
         >
           {isUploading ? (

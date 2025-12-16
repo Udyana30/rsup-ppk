@@ -1,8 +1,8 @@
 'use client'
 
-import { useDocumentHistory } from '@/hooks/use-document-history'
-import { useDocumentActions } from '@/hooks/use-document-actions'
-import { useAuth } from '@/hooks/use-auth'
+import { useDocumentHistory } from '@/hooks/documents/use-document-history'
+import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, RotateCcw, FileText, Calendar, User, Download, Clock } from 'lucide-react'
@@ -61,7 +61,7 @@ export function DocumentHistoryModal({ documentId, onSuccess }: DocumentHistoryM
                   <Badge variant="default" className="bg-gray-700">v{ver.version}</Badge>
                   <span className="text-sm font-bold text-gray-900 line-clamp-1">{ver.title}</span>
                 </div>
-                
+
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -75,29 +75,29 @@ export function DocumentHistoryModal({ documentId, onSuccess }: DocumentHistoryM
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
-                 <a 
-                    href={ver.file_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
-                    title="Download File"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleRestore(ver.id)}
-                    disabled={isProcessing}
-                    className="gap-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800"
-                  >
-                    {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                    Restore
-                  </Button>
+                <a
+                  href={ver.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  title="Download File"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRestore(ver.id)}
+                  disabled={isProcessing}
+                  className="gap-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800"
+                >
+                  {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                  Restore
+                </Button>
               </div>
             </div>
-            
+
             {ver.change_log && (
               <div className="mt-3 rounded-lg bg-gray-50 p-2 text-xs text-gray-600">
                 <span className="font-semibold">Catatan:</span> {ver.change_log}

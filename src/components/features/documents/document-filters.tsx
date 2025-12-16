@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Search, Filter, X, Calendar, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useCategories } from '@/hooks/use-categories'
+import { useCategories } from '@/hooks/master/use-categories'
 import { cn } from '@/lib/utils'
 
 interface DocumentFiltersProps {
@@ -48,14 +48,14 @@ export function DocumentFilters({
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Cari berdasarkan judul dokumen..." 
+          <Input
+            placeholder="Cari berdasarkan judul dokumen..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 h-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-[#41A67E] focus:ring-[#41A67E]"
           />
         </div>
-        <Button 
+        <Button
           variant={isExpanded ? 'primary' : 'outline'}
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
@@ -76,15 +76,15 @@ export function DocumentFilters({
       {isExpanded && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-inner animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="grid gap-5 md:grid-cols-3 lg:grid-cols-5">
-            
+
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Mulai Tanggal</label>
               <div className="relative">
-                <Input 
-                    type="date" 
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
                 <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
@@ -93,11 +93,11 @@ export function DocumentFilters({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Sampai Tanggal</label>
               <div className="relative">
-                <Input 
-                    type="date" 
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer" 
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
                 <Calendar className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
@@ -149,14 +149,14 @@ export function DocumentFilters({
               </div>
             </div>
           </div>
-          
+
           <div className="mt-5 flex justify-end border-t border-gray-200 pt-3">
-            <button 
-                onClick={clearFilters}
-                className="text-xs font-bold text-gray-600 hover:text-red-600 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-red-50"
+            <button
+              onClick={clearFilters}
+              className="text-xs font-bold text-gray-600 hover:text-red-600 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-red-50"
             >
-                <X className="h-3.5 w-3.5" />
-                Reset Semua Filter
+              <X className="h-3.5 w-3.5" />
+              Reset Semua Filter
             </button>
           </div>
         </div>

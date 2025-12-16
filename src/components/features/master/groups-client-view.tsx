@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { MasterDataTable } from './master-data-table'
 import { GroupFormModal } from './modal/group-form-modal'
-import { useMasterGroups } from '@/hooks/use-master-groups'
+import { useMasterGroups } from '@/hooks/master/use-master-groups'
 import { MedicalStaffGroup } from '@/types'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
@@ -14,7 +14,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
   const { deleteGroup, isProcessing } = useMasterGroups()
   const [data, setData] = useState(initialData)
   const [search, setSearch] = useState('')
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MedicalStaffGroup | undefined>(undefined)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
     if (!deleteId) return
     const success = await deleteGroup(deleteId)
     if (success) {
-        setDeleteId(null)
+      setDeleteId(null)
     }
   }
 
@@ -60,9 +60,9 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
         onClose={() => setIsModalOpen(false)}
         title={editingItem ? 'Edit Kelompok Medis' : 'Tambah Kelompok Medis'}
       >
-        <GroupFormModal 
-          initialData={editingItem} 
-          onSuccess={() => setIsModalOpen(false)} 
+        <GroupFormModal
+          initialData={editingItem}
+          onSuccess={() => setIsModalOpen(false)}
         />
       </Modal>
 

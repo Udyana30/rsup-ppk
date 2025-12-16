@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Profile } from '@/types'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
-import { useUserActions } from '@/hooks/use-user-actions'
-import { useClickOutside } from '@/hooks/use-click-outside'
+import { useUserActions } from '@/hooks/users/use-user-actions'
+import { useClickOutside } from '@/hooks/ui/use-click-outside'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
 const EditUserModal = dynamic(() =>
@@ -88,7 +88,7 @@ export function RecentUsers({ users, currentUser }: RecentUsersProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {users.slice(0, 8).map((user) => (
+            {users.slice(0, 6).map((user) => (
               <tr key={user.id} className="hover:bg-gray-50/50">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { adminCreateUser } from '@/actions/auth-admin'
 import { Profile } from '@/types'
-import { Loader2, UserCircle, User, Shield, CheckCircle } from 'lucide-react'
+import { Loader2, UserCircle, User, Shield, CheckCircle, Copy } from 'lucide-react'
+import { useToast } from '@/contexts/toast-context'
 
 interface CreateUserModalProps {
   currentUser: Profile
@@ -13,9 +14,10 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps) {
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [tempResult, setTempResult] = useState<{username: string, pass: string} | null>(null)
-  
+  const [tempResult, setTempResult] = useState<{ username: string, pass: string } | null>(null)
+
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [role, setRole] = useState('user')
@@ -28,7 +30,7 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
 
     try {
       const result = await adminCreateUser({ fullName, username, role })
-      
+
       if (result.success && result.tempPassword) {
         setTempResult({ username: result.username!, pass: result.tempPassword })
       } else {
@@ -38,6 +40,17 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
       console.error(error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleCopy = () => {
+    if (tempResult?.pass) {
+      navigator.clipboard.writeText(tempResult.pass)
+      toast({
+        title: 'Disalin!',
+        message: 'Password berhasil disalin ke clipboard',
+        type: 'success'
+      })
     }
   }
 
@@ -58,8 +71,13 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Password Sementara</p>
           <div className="mt-2 flex items-center justify-between rounded-md bg-gray-50 p-3 border border-gray-200">
             <code className="text-xl font-mono font-bold text-gray-900 tracking-wider">{tempResult.pass}</code>
-            <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(tempResult.pass)}>
-              Copy
+            <Button
+              size="sm"
+              className="bg-gray-400 text-white hover:bg-gray-600 gap-2"
+              onClick={handleCopy}
+            >
+              <Copy className="h-4 w-4" />
+              Salin Password
             </Button>
           </div>
         </div>
@@ -76,7 +94,7 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
       <div className="space-y-2">
         <label className="block text-sm font-bold text-gray-900">Nama Lengkap</label>
         <div className="relative">
-          <Input 
+          <Input
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -90,7 +108,7 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
       <div className="space-y-2">
         <label className="block text-sm font-bold text-gray-900">Username</label>
         <div className="relative">
-          <Input 
+          <Input
             required
             value={username}
             onChange={(e) => setUsername(e.target.value.replace(/\s/g, '').toLowerCase())}
@@ -118,8 +136,8 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
       </div>
 
       <div className="pt-4">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isLoading}
           className="w-full h-12 bg-[#41A67E] hover:bg-[#368f6b] text-base font-bold text-white shadow-md"
         >

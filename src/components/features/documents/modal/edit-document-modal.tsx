@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { useCategories } from '@/hooks/use-categories'
-import { useDocumentActions } from '@/hooks/use-document-actions'
-import { useAuth } from '@/hooks/use-auth'
+import { useCategories } from '@/hooks/master/use-categories'
+import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText, Calendar } from 'lucide-react'
@@ -31,7 +31,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
 
   const currentVersion = Number(document.version || '1')
   const displayVersion = mode === 'version' ? String(currentVersion + 1) : String(currentVersion)
-  
+
   const existingFileName = decodeURIComponent(document.file_url.split('/').pop() || 'Dokumen.pdf')
 
   const handleSubmit = async (e: FormEvent) => {
@@ -67,8 +67,8 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         <div>
           <span className="block font-bold uppercase tracking-wide">{mode === 'edit' ? 'Mode Edit Metadata' : 'Mode Update Versi'}</span>
           <span className="opacity-90">
-            {mode === 'edit' 
-              ? 'Perubahan akan disimpan langsung pada dokumen ini.' 
+            {mode === 'edit'
+              ? 'Perubahan akan disimpan langsung pada dokumen ini.'
               : `Sistem akan membuat dokumen baru Versi ${displayVersion} dan mengarsipkan Versi ${currentVersion}.`}
           </span>
         </div>
@@ -77,10 +77,10 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
       <div className="grid gap-5 md:grid-cols-4">
         <div className="space-y-2 md:col-span-3">
           <label className="block text-sm font-medium text-gray-900">Judul Dokumen PPK</label>
-          <Input 
-            required 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
+          <Input
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
           />
         </div>
@@ -94,9 +94,9 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-900">Deskripsi (Opsional)</label>
-        <textarea 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Tambahkan ringkasan atau keterangan singkat..."
           rows={3}
           className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:border-[#41A67E] focus:outline-none focus:ring-2 focus:ring-[#41A67E]/20"
@@ -107,11 +107,11 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Tanggal Pengesahan</label>
           <div className="relative">
-            <Input 
+            <Input
               type="date"
-              required 
-              value={validationDate} 
-              onChange={(e) => setValidationDate(e.target.value)} 
+              required
+              value={validationDate}
+              onChange={(e) => setValidationDate(e.target.value)}
               className="h-11 border-gray-300 bg-white px-4 text-base text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
             />
             <Calendar className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -121,7 +121,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Kelompok Staff Medis</label>
           <div className="relative">
-            <select 
+            <select
               required
               className="h-11 w-full appearance-none rounded-md border border-gray-300 bg-white pl-4 pr-10 text-base text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
               value={groupId}
@@ -138,7 +138,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Jenis Dokumen</label>
           <div className="relative">
-            <select 
+            <select
               required
               className="h-11 w-full appearance-none rounded-md border border-gray-300 bg-white pl-4 pr-10 text-base text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E]"
               value={typeId}
@@ -152,12 +152,12 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Status Dokumen</label>
-          <div 
+          <div
             onClick={() => setIsActive(!isActive)}
             className={cn(
               "flex h-11 w-full cursor-pointer items-center justify-between rounded-md border px-4 transition-all",
-              isActive 
-                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]" 
+              isActive
+                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]"
                 : "border-gray-300 bg-gray-50 text-gray-500"
             )}
           >
@@ -171,21 +171,21 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         <label className="block text-sm font-medium text-gray-900">
           {mode === 'version' ? 'Upload File Versi Baru' : 'File Dokumen'}
         </label>
-        
+
         <div className={cn(
           "relative rounded-xl border-2 border-dashed p-6 text-center transition-all",
-          mode === 'version' && !file 
-            ? "border-orange-300 bg-orange-50 hover:bg-orange-100" 
+          mode === 'version' && !file
+            ? "border-orange-300 bg-orange-50 hover:bg-orange-100"
             : "border-gray-300 bg-gray-50 hover:border-[#41A67E] hover:bg-[#41A67E]/5"
         )}>
-          <Input 
-            type="file" 
+          <Input
+            type="file"
             accept="application/pdf"
             required={mode === 'version'}
             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-            onChange={(e) => setFile(e.target.files?.[0] || null)} 
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
-          
+
           <div className="relative z-0 flex flex-col items-center gap-2">
             <div className={cn(
               "rounded-full p-3 shadow-sm ring-1",
@@ -197,7 +197,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
                 <FileCheck className="h-6 w-6 text-gray-400" />
               )}
             </div>
-            
+
             <div className="flex flex-col items-center">
               {file ? (
                 <>
@@ -220,9 +220,9 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
       </div>
 
       <div className="flex justify-end pt-4">
-        <Button 
-          type="submit" 
-          disabled={isProcessing} 
+        <Button
+          type="submit"
+          disabled={isProcessing}
           className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
         >
           {isProcessing ? (

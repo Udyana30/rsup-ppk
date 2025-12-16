@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useLogin } from '@/hooks/use-login'
+import { useLogin } from '@/hooks/auth/use-login'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, FileText, Eye, EyeOff, User } from 'lucide-react'
@@ -16,7 +16,7 @@ export function LoginForm() {
         <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-[#41A67E]/10">
           <FileText className="h-7 w-7 text-[#41A67E]" />
         </div>
-        
+
         <h2 className="text-2xl font-bold tracking-tight text-[#41A67E]">
           RSUP NGOERAH
         </h2>
@@ -28,8 +28,8 @@ export function LoginForm() {
       <form className="space-y-6" onSubmit={handleLogin}>
         <div className="space-y-5">
           <div>
-            <label 
-              htmlFor="username" 
+            <label
+              htmlFor="username"
               className="mb-1.5 block text-sm font-semibold text-gray-700"
             >
               Username
@@ -50,8 +50,8 @@ export function LoginForm() {
           </div>
 
           <div>
-            <label 
-              htmlFor="password" 
+            <label
+              htmlFor="password"
               className="mb-2 block text-sm font-semibold text-gray-700"
             >
               Password
@@ -89,8 +89,8 @@ export function LoginForm() {
           </div>
         )}
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="h-11 w-full rounded-xl bg-[#41A67E] text-sm font-bold text-white shadow-md transition-all hover:-translate-y-0.5 hover:bg-[#368f6b] hover:shadow-lg mb-6"
           disabled={isLoading}
         >

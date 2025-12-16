@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { useToast } from '@/contexts/toast-context'
 
 export function useDocuments() {

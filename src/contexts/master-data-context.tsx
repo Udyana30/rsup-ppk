@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { createClient } from '@/lib/supabase/client'
 import { masterService } from '@/services/master.service'
 import { MedicalStaffGroup, PpkType } from '@/types'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/hooks/auth/use-auth'
 
 interface MasterDataContextType {
   groups: MedicalStaffGroup[]
@@ -18,7 +18,7 @@ const MasterDataContext = createContext<MasterDataContextType | undefined>(undef
 export function MasterDataProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth()
   const supabase = createClient()
-  
+
   const [groups, setGroups] = useState<MedicalStaffGroup[]>([])
   const [types, setTypes] = useState<PpkType[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
@@ -32,7 +32,7 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
 
       if (groupsRes.data) setGroups(groupsRes.data)
       if (typesRes.data) setTypes(typesRes.data)
-      
+
       setIsDataLoaded(true)
     } catch (error) {
       console.error(error)
@@ -46,11 +46,11 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   }, [authLoading, user, isDataLoaded, fetchMasterData])
 
   return (
-    <MasterDataContext.Provider value={{ 
-      groups, 
-      types, 
+    <MasterDataContext.Provider value={{
+      groups,
+      types,
       isLoading: !isDataLoaded && !!user,
-      refreshMasterData: fetchMasterData 
+      refreshMasterData: fetchMasterData
     }}>
       {children}
     </MasterDataContext.Provider>

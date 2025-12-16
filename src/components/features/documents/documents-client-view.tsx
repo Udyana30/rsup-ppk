@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useDocumentActions } from '@/hooks/use-document-actions'
+import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { PpkDocument } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

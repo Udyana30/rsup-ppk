@@ -7,7 +7,7 @@ import { Profile } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
-import { useUserActions } from '@/hooks/use-user-actions'
+import { useUserActions } from '@/hooks/users/use-user-actions'
 import { UserFilters } from '@/components/features/users/user-filters'
 import { Plus, User, Shield, Pencil, Trash2, AlertCircle, UserCircle, Loader2 } from 'lucide-react'
 

@@ -7,8 +7,8 @@ import { PpkDocument } from '@/types'
 import { FileText, MoreHorizontal, FilePlus, Pencil, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useDocumentActions } from '@/hooks/use-document-actions'
-import { useClickOutside } from '@/hooks/use-click-outside'
+import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useClickOutside } from '@/hooks/ui/use-click-outside'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
 const EditDocumentModal = dynamic(() =>
@@ -105,7 +105,7 @@ export function RecentDocuments({ documents }: RecentDocumentsProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {documents.slice(0, 8).map((doc) => (
+            {documents.slice(0, 6).map((doc) => (
               <tr
                 key={doc.id}
                 className="hover:bg-gray-50/50 cursor-pointer transition-colors"

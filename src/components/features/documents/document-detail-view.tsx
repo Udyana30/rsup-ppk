@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
-import { useAuth } from '@/hooks/use-auth'
-import { useDocumentActions } from '@/hooks/use-document-actions'
+import { useAuth } from '@/hooks/auth/use-auth'
+import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { EditDocumentModal } from '@/components/features/documents/modal/edit-document-modal'
 import { DocumentHistoryModal } from '@/components/features/documents/modal/document-history-modal'
-import { 
-  ArrowLeft, Calendar, FileText, User, Tag, 
+import {
+  ArrowLeft, Calendar, FileText, User, Tag,
   Pencil, Trash2, AlertCircle, Loader2, GitBranch, FileClock
 } from 'lucide-react'
 
@@ -26,19 +26,19 @@ interface DocumentDetailViewProps {
 export function DocumentDetailView({ documentId, initialDocument }: DocumentDetailViewProps) {
   const router = useRouter()
   const supabase = createClient()
-  const { user } = useAuth() 
+  const { user } = useAuth()
   const { deleteDocument, isProcessing } = useDocumentActions()
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  
+
   const fetchDoc = async () => {
     try {
       const { data, error } = await documentService.getDocumentById(supabase, documentId)
       if (error) throw error
       setDocument(data as unknown as PpkDocument)
-      router.refresh() 
+      router.refresh()
     } catch (e) {
       console.error(e)
     }
@@ -47,8 +47,8 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   const handleDeleteConfirm = async () => {
     const success = await deleteDocument(documentId)
     if (success) {
-        setIsDeleteDialogOpen(false)
-        router.push('/dashboard/documents')
+      setIsDeleteDialogOpen(false)
+      router.push('/dashboard/documents')
     }
   }
 
@@ -66,9 +66,9 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   return (
     <div className="flex h-[calc(100vh-100px)] flex-col gap-6 lg:flex-row">
       <div className="flex w-full flex-col gap-6 lg:w-[400px] lg:shrink-0">
-        <Button 
-          variant="outline" 
-          onClick={() => router.back()} 
+        <Button
+          variant="outline"
+          onClick={() => router.back()}
           className="w-fit gap-2 border-none bg-transparent pl-0 text-gray-500 hover:bg-transparent hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -109,7 +109,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
               <span className="text-xs font-bold uppercase text-gray-400">Tanggal Pengesahan</span>
               <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                {document.validation_date 
+                {document.validation_date
                   ? new Date(document.validation_date).toLocaleDateString('id-ID', { dateStyle: 'long' })
                   : '-'}
               </div>
@@ -125,7 +125,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button 
+          <Button
             onClick={() => setModalMode('edit')}
             disabled={isProcessing}
             className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-sm hover:bg-[#368f6b]"
@@ -135,30 +135,30 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           </Button>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button 
-                onClick={() => setModalMode('version')}
-                disabled={isProcessing}
-                className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+            <Button
+              onClick={() => setModalMode('version')}
+              disabled={isProcessing}
+              className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
             >
-                <GitBranch className="h-6 w-6" />
-                Update Versi
+              <GitBranch className="h-6 w-6" />
+              Update Versi
             </Button>
-            
-            <Button 
-                onClick={() => setModalMode('history')}
-                disabled={isProcessing}
-                variant="outline"
-                className="h-20 flex-col gap-2 border-blue-100 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+
+            <Button
+              onClick={() => setModalMode('history')}
+              disabled={isProcessing}
+              variant="outline"
+              className="h-20 flex-col gap-2 border-blue-100 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
             >
-                <FileClock className="h-6 w-6" />
-                Lihat Riwayat
+              <FileClock className="h-6 w-6" />
+              Lihat Riwayat
             </Button>
           </div>
 
-          <Button 
+          <Button
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isProcessing}
-            variant="destructive" 
+            variant="destructive"
             className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
           >
             {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
@@ -169,7 +169,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
 
       <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner">
         <object
-          data={`${document.file_url}#toolbar=1`} 
+          data={`${document.file_url}#toolbar=1`}
           type="application/pdf"
           className="h-full w-full"
         >
@@ -183,27 +183,27 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         isOpen={!!modalMode}
         onClose={() => setModalMode(null)}
         title={
-          modalMode === 'edit' ? 'Edit Dokumen' : 
-          modalMode === 'version' ? 'Perbarui Versi Dokumen' :
-          'Riwayat Versi Dokumen'
+          modalMode === 'edit' ? 'Edit Dokumen' :
+            modalMode === 'version' ? 'Perbarui Versi Dokumen' :
+              'Riwayat Versi Dokumen'
         }
       >
         {modalMode === 'history' ? (
-          <DocumentHistoryModal 
-            documentId={document.id} 
+          <DocumentHistoryModal
+            documentId={document.id}
             onSuccess={() => {
               setModalMode(null)
               fetchDoc()
-            }} 
+            }}
           />
         ) : (
-          <EditDocumentModal 
-            document={document} 
-            mode={modalMode as 'edit' | 'version'} 
+          <EditDocumentModal
+            document={document}
+            mode={modalMode as 'edit' | 'version'}
             onSuccess={() => {
               setModalMode(null)
               fetchDoc()
-            }} 
+            }}
           />
         )}
       </Modal>

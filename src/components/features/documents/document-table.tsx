@@ -1,6 +1,6 @@
 'use client'
 
-import { useDocuments } from '@/hooks/use-documents'
+import { useDocuments } from '@/hooks/documents/use-documents'
 import { Button } from '@/components/ui/button'
 import { Trash2, FileText, Download } from 'lucide-react'
 
@@ -47,12 +47,12 @@ export function DocumentTable() {
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
                     <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline">
-                            <Download className="h-4 w-4" />
-                        </Button>
+                      <Button size="sm" variant="outline">
+                        <Download className="h-4 w-4" />
+                      </Button>
                     </a>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="destructive"
                       onClick={() => handleDelete(doc.id)}
                     >
