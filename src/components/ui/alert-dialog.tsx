@@ -39,9 +39,9 @@ export function AlertDialog({
   if (!isOpen || !mounted) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-0">
-      <div 
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" 
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-0">
+      <div
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
         onClick={onCancel}
       />
 
@@ -52,7 +52,7 @@ export function AlertDialog({
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
           )}
-          
+
           <div className={cn("mt-3 text-center sm:mt-0 sm:text-left", variant === 'destructive' && "sm:ml-4")}>
             <h3 className="text-lg font-semibold leading-6 text-gray-900">
               {title}
@@ -71,8 +71,8 @@ export function AlertDialog({
             onClick={onConfirm}
             disabled={isProcessing}
             className={cn(
-               "w-full sm:w-auto min-w-[100px]",
-               variant === 'destructive' ? "bg-red-600 hover:bg-red-700" : "bg-[#41A67E] hover:bg-[#368f6b]"
+              "w-full sm:w-auto min-w-[100px]",
+              variant === 'destructive' ? "bg-red-600 hover:bg-red-700" : "bg-[#41A67E] hover:bg-[#368f6b]"
             )}
           >
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

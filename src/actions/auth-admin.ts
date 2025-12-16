@@ -90,3 +90,16 @@ export async function adminResetPassword(userId: string, newPassword: string) {
 
   return { success: true }
 }
+
+export async function adminUpdateUserEmail(userId: string, newEmail: string) {
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    email: newEmail,
+    email_confirm: true
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}

@@ -39,11 +39,5 @@ export const MENU_ITEMS: SidebarItem[] = [
         roles: ['admin'],
       },
     ]
-  },
-  {
-    title: 'Pengaturan',
-    href: '/dashboard/settings',
-    icon: Settings,
-    roles: ['admin', 'user'],
-  },
+  }
 ]

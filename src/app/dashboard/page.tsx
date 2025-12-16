@@ -10,20 +10,24 @@ import { FileText, Users, Clock, Activity } from 'lucide-react'
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  const [documentsRes, usersData, groupsRes, typesRes] = await Promise.all([
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  const [documentsRes, usersData, groupsRes, typesRes, currentUserRes] = await Promise.all([
     documentService.getDocuments(supabase),
     userService.getAllUsers(supabase),
     masterService.getGroups(supabase),
-    masterService.getTypes(supabase)
+    masterService.getTypes(supabase),
+    authUser ? supabase.from('profiles').select('*').eq('id', authUser.id).single() : Promise.resolve({ data: null, error: null })
   ])
 
   const documents = documentsRes.data || []
   const users = usersData || []
   const groups = groupsRes.data || []
   const types = typesRes.data || []
+  const currentUser = currentUserRes.data
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 overflow-y-auto space-y-6 pr-2">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
         <p className="text-gray-500">Selamat datang kembali! Berikut ringkasan sistem Anda.</p>
@@ -36,6 +40,7 @@ export default async function DashboardPage() {
           trend="Data Terkini"
           trendUp={true}
           icon={FileText}
+          href="/dashboard/documents"
         />
         <StatsCard
           title="User Aktif"
@@ -43,6 +48,7 @@ export default async function DashboardPage() {
           trend="Data Terkini"
           trendUp={true}
           icon={Users}
+          href="/dashboard/users"
         />
         <StatsCard
           title="Kelompok Medis"
@@ -50,6 +56,7 @@ export default async function DashboardPage() {
           trend="Master Data"
           trendUp={true}
           icon={Activity}
+          href="/dashboard/master/groups"
         />
         <StatsCard
           title="Tipe Dokumen"
@@ -57,6 +64,7 @@ export default async function DashboardPage() {
           trend="Master Data"
           trendUp={true}
           icon={Clock}
+          href="/dashboard/master/types"
         />
       </div>
 
@@ -65,7 +73,7 @@ export default async function DashboardPage() {
           <RecentDocuments documents={documents} />
         </div>
         <div>
-          <RecentUsers users={users} />
+          <RecentUsers users={users} currentUser={currentUser} />
         </div>
       </div>
     </div>
