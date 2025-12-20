@@ -70,5 +70,10 @@ export function useMasterTypes() {
     }
   }
 
-  return { createType, updateType, deleteType, isProcessing }
+  return {
+    createType,
+    updateType,
+    deleteType,
+    isProcessing
+  }
 }

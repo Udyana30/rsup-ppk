@@ -13,7 +13,7 @@ import { DocumentFilters } from '@/components/features/documents/document-filter
 import { exportDocumentsToExcel } from '@/lib/excel-exporter'
 import { 
   Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, 
-  User, GitBranch, FileClock, FileSpreadsheet, Loader2 
+  User, FileSpreadsheet, Loader2 
 } from 'lucide-react'
 
 const UploadFormModal = dynamic(() =>
@@ -79,7 +79,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
         try {
             await exportDocumentsToExcel(filteredDocs)
         } catch (error) {
-            console.error('Export failed:', error)
+            console.error(error)
         } finally {
             setIsExporting(false)
         }
@@ -105,8 +105,9 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
     }
 
     const colWidths = {
-        title: 'w-[35%]',
-        category: 'w-[20%]',
+        title: 'w-[30%]',
+        type: 'w-[10%]',
+        category: 'w-[15%]',
         status: 'w-[15%]',
         date: 'w-[15%]',
         action: 'w-[15%]'
@@ -173,6 +174,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                         <thead className="bg-gray-50 text-gray-700 shadow-sm table w-full table-fixed">
                             <tr>
                                 <th className={`px-6 py-4 font-bold ${colWidths.title}`}>Judul Dokumen</th>
+                                <th className={`px-6 py-4 font-bold ${colWidths.type}`}>Jenis</th>
                                 <th className={`px-6 py-4 font-bold ${colWidths.category}`}>Kategori</th>
                                 <th className={`px-6 py-4 font-bold ${colWidths.status}`}>Status</th>
                                 <th className={`px-6 py-4 font-bold ${colWidths.date}`}>Tanggal</th>
@@ -198,15 +200,20 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                                                     {doc.title}
                                                 </span>
                                                 <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                    <span>{doc.ppk_types?.name}</span>
-                                                    <span className="text-gray-300">•</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <User className="h-3 w-3" />
-                                                        {doc.profiles?.full_name || 'System'}
-                                                    </div>
+                                                    <User className="h-3 w-3" />
+                                                    {doc.profiles?.full_name || 'System'}
                                                 </div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className={`px-6 py-4 ${colWidths.type}`}>
+                                        {doc.ppk_types?.code ? (
+                                            <span className="font-mono font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100 text-xs">
+                                                {doc.ppk_types.code}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
                                     </td>
                                     <td className={`px-6 py-4 text-gray-700 font-medium ${colWidths.category}`}>
                                         {doc.medical_staff_groups?.name || '-'}
@@ -277,6 +284,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                     <EditDocumentModal
                         document={editingDoc}
                         mode="edit"
+                        nextVersion={editingDoc.version || '1'}
                         onSuccess={() => {
                             setEditingDoc(null)
                             handleRefresh()

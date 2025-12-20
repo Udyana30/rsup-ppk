@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, FormEvent } from 'react'
 import { useCategories } from '@/hooks/master/use-categories'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
-import { documentService } from '@/services/document.service'
 import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,11 +13,11 @@ import { cn } from '@/lib/utils'
 interface EditDocumentModalProps {
   document: PpkDocument
   mode: 'edit' | 'version'
+  nextVersion: string
   onSuccess: () => void
 }
 
-export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentModalProps) {
-  const supabase = createClient()
+export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: EditDocumentModalProps) {
   const { groups, types } = useCategories()
   const { editMetadata, createNewVersion, isProcessing } = useDocumentActions()
   const { user } = useAuth()
@@ -31,30 +29,9 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
   const [groupId, setGroupId] = useState(document.group_id || '')
   const [typeId, setTypeId] = useState(document.type_id || '')
   const [isActive, setIsActive] = useState(document.is_active)
-  
-  const [predictedVersion, setPredictedVersion] = useState<string | null>(null)
-  const [isCalculating, setIsCalculating] = useState(false)
 
   const currentVersion = document.version || '1'
   const existingFileName = decodeURIComponent(document.file_url.split('/').pop() || 'Dokumen.pdf')
-
-  useEffect(() => {
-    const fetchNextVersion = async () => {
-      if (mode === 'version') {
-        setIsCalculating(true)
-        try {
-          const nextVer = await documentService.getNextVersionNumber(supabase, document.id)
-          setPredictedVersion(nextVer)
-        } catch (error) {
-          console.error('Gagal menghitung versi', error)
-        } finally {
-          setIsCalculating(false)
-        }
-      }
-    }
-
-    fetchNextVersion()
-  }, [mode, document.id, supabase])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -93,9 +70,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
           <span className="opacity-90">
             {mode === 'edit'
               ? 'Perubahan akan disimpan langsung pada dokumen ini.'
-              : isCalculating 
-                ? 'Menghitung nomor versi selanjutnya...'
-                : `Sistem akan menerbitkan Versi ${predictedVersion} dan mengarsipkan Versi ${currentVersion}.`
+              : `Sistem akan menerbitkan Versi ${nextVersion} dan mengarsipkan Versi ${currentVersion}.`
             }
           </span>
         </div>
@@ -120,14 +95,10 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
               : "border-gray-200 bg-gray-100 text-gray-500"
           )}>
             {mode === 'version' ? (
-              isCalculating ? (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-              ) : (
-                <>
-                  <GitBranch className="h-4 w-4" />
-                  <span>v{predictedVersion}</span>
-                </>
-              )
+              <>
+                <GitBranch className="h-4 w-4" />
+                <span>v{nextVersion}</span>
+              </>
             ) : (
               <span>v{currentVersion}</span>
             )}
@@ -265,7 +236,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
       <div className="flex justify-end pt-4">
         <Button
           type="submit"
-          disabled={isProcessing || (mode === 'version' && isCalculating)}
+          disabled={isProcessing}
           className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
         >
           {isProcessing ? (

@@ -5,6 +5,8 @@ type DocumentInsert = Database['public']['Tables']['ppk_documents']['Insert']
 type DocumentUpdate = Database['public']['Tables']['ppk_documents']['Update']
 
 export const documentService = {
+  // ... (fungsi getDocuments, getDocumentById, getDocumentVersions, getDocumentLogs, getNextVersionNumber, createDocument, updateDocument TETAP SAMA)
+
   // 1. GET ALL DOCUMENTS
   async getDocuments(client: SupabaseClient<Database>) {
     return client
@@ -12,27 +14,25 @@ export const documentService = {
       .select(`
         *,
         medical_staff_groups (name),
-        ppk_types (name),
+        ppk_types (name, code),
         profiles (full_name)
       `)
       .order('created_at', { ascending: false })
   },
 
-  // 2. GET SINGLE DOCUMENT
   async getDocumentById(client: SupabaseClient<Database>, id: string) {
     return client
       .from('ppk_documents')
       .select(`
         *,
         medical_staff_groups (name),
-        ppk_types (name),
+        ppk_types (name, code),
         profiles (full_name)
       `)
       .eq('id', id)
       .single()
   },
 
-  // 3. GET VERSIONS HISTORY
   async getDocumentVersions(client: SupabaseClient<Database>, documentId: string) {
     return client
       .from('ppk_document_versions')
@@ -44,7 +44,6 @@ export const documentService = {
       .order('version', { ascending: false })
   },
 
-  // 4. GET LOGS (FIX: Pastikan fungsi ini ada agar error console hilang)
   async getDocumentLogs(client: SupabaseClient<Database>, documentId: string) {
     return client
       .from('ppk_document_logs')
@@ -56,7 +55,6 @@ export const documentService = {
       .order('created_at', { ascending: false })
   },
 
-  // 5. PREDICT NEXT VERSION (Logic Perhitungan Versi)
   async getNextVersionNumber(client: SupabaseClient<Database>, documentId: string) {
     const { data: active } = await client
       .from('ppk_documents')
@@ -81,7 +79,6 @@ export const documentService = {
     return String(nextVer)
   },
 
-  // 6. CREATE
   async createDocument(
     client: SupabaseClient<Database>,
     data: DocumentInsert
@@ -93,7 +90,6 @@ export const documentService = {
       .single()
   },
 
-  // 7. UPDATE METADATA
   async updateDocument(
     client: SupabaseClient<Database>,
     id: string,
@@ -107,17 +103,19 @@ export const documentService = {
       .single()
   },
 
-  // 8. DELETE DOCUMENT (Soft/Hard Delete via Edge Function)
   async deleteDocument(client: SupabaseClient<Database>, id: string) {
-    const { data, error } = await client.functions.invoke('delete-document', {
-      body: { documentId: id }
+
+    const { data } = await client.functions.invoke('delete-document', {
+      body: { documentId: id },
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     })
 
-    if (error) throw error
     return data
   },
 
-  // 9. DELETE VERSION HISTORY
   async deleteVersion(client: SupabaseClient<Database>, versionId: string) {
     return client
       .from('ppk_document_versions')
@@ -125,7 +123,6 @@ export const documentService = {
       .eq('id', versionId)
   },
 
-  // 10. RESTORE VERSION (RPC Call)
   async restoreVersion(
     client: SupabaseClient<Database>, 
     documentId: string, 

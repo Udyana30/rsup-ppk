@@ -21,8 +21,11 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
   const [editingItem, setEditingItem] = useState<PpkType | undefined>(undefined)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
+  // Sync dengan server state, tapi filter 'deleted_at' untuk keamanan ganda
   useEffect(() => {
-    setData(initialData)
+    if (initialData) {
+      setData(initialData.filter(item => !item.deleted_at))
+    }
   }, [initialData])
 
   const handleAdd = () => {
@@ -37,17 +40,29 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
 
   const handleDeleteConfirm = async () => {
     if (!deleteId) return
+
+    // Optimistic Update: Hapus dari UI segera sebelum server selesai merespons
+    const previousData = [...data]
+    setData((prev) => prev.filter((item) => item.id !== deleteId))
+
     const success = await deleteType(deleteId)
+    
     if (success) {
       setDeleteId(null)
+    } else {
+      // Revert jika gagal (Rollback)
+      setData(previousData)
     }
   }
+
+  // Safety filter saat render untuk memastikan tidak ada item terhapus yang lolos
+  const activeData = data.filter(item => !item.deleted_at)
 
   return (
     <>
       <MasterDataTable
-        title="Tipe Dokumen"
-        data={data}
+        title="Jenis Dokumen"
+        data={activeData}
         search={search}
         setSearch={setSearch}
         onAdd={handleAdd}
@@ -61,7 +76,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingItem ? 'Edit Tipe Dokumen' : 'Tambah Tipe Dokumen'}
+        title={editingItem ? 'Edit Jenis Dokumen' : 'Tambah Jenis Dokumen'}
       >
         <TypeFormModal
           initialData={editingItem}
@@ -71,8 +86,8 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
 
       <AlertDialog
         isOpen={!!deleteId}
-        title="Hapus Tipe Dokumen"
-        description="Apakah Anda yakin ingin menghapus tipe dokumen ini?"
+        title="Hapus Jenis Dokumen"
+        description="Apakah Anda yakin ingin menghapus jenis dokumen ini?"
         confirmLabel="Hapus"
         variant="destructive"
         isProcessing={isProcessing}

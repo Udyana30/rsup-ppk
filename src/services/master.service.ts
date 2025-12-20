@@ -8,6 +8,7 @@ import {
 } from '@/types'
 
 export const masterService = {
+  // Groups
   async getGroups(client: SupabaseClient<Database>) {
     return client
       .from('medical_staff_groups')
@@ -42,6 +43,7 @@ export const masterService = {
       .single()
   },
 
+  // Types
   async getTypes(client: SupabaseClient<Database>) {
     return client
       .from('ppk_types')

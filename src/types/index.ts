@@ -15,7 +15,7 @@ export type Profile = Database['public']['Tables']['profiles']['Row'] & {
 
 export type PpkDocument = Database['public']['Tables']['ppk_documents']['Row'] & {
   medical_staff_groups?: Pick<MedicalStaffGroup, 'name'> | null
-  ppk_types?: Pick<PpkType, 'name'> | null
+  ppk_types?: Pick<PpkType, 'name' | 'code'> | null
   profiles?: Pick<Profile, 'full_name'> | null
 }
 

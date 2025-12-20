@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { useDocumentHistory } from '@/hooks/documents/use-document-history'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { useAuth } from '@/hooks/auth/use-auth'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
@@ -11,18 +10,31 @@ import {
   Loader2, RotateCcw, FileText, Calendar, User, Download, 
   Trash2, History, Activity 
 } from 'lucide-react'
+import { DocumentVersion, DocumentLog } from '@/types'
+import { useState } from 'react'
 
 interface DocumentHistoryModalProps {
   documentId: string
   currentVersion: string
+  versions: DocumentVersion[]
+  logs: DocumentLog[]
+  isLoading: boolean
+  refresh: () => void
   onSuccess: () => void
 }
 
 type TabType = 'versions' | 'logs'
 
-export function DocumentHistoryModal({ documentId, currentVersion, onSuccess }: DocumentHistoryModalProps) {
+export function DocumentHistoryModal({ 
+  documentId, 
+  currentVersion, 
+  versions, 
+  logs, 
+  isLoading, 
+  refresh,
+  onSuccess 
+}: DocumentHistoryModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('versions')
-  const { versions, logs, isLoading, refresh } = useDocumentHistory(documentId)
   const { restoreVersion, deleteVersion, isProcessing } = useDocumentActions()
   const { user } = useAuth()
   
@@ -219,7 +231,6 @@ function getActionColor(action: string) {
     case 'RESTORE': return 'bg-orange-500'
     case 'UPDATE_VERSION': return 'bg-blue-500'
     case 'CREATE': return 'bg-green-500'
-    case 'DELETE_VERSION': return 'bg-red-500'
     default: return 'bg-gray-400'
   }
 }

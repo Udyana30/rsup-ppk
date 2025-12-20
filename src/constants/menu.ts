@@ -33,7 +33,7 @@ export const MENU_ITEMS: SidebarItem[] = [
         roles: ['admin'],
       },
       {
-        title: 'Tipe Dokumen',
+        title: 'Jenis Dokumen',
         href: '/dashboard/master/types',
         icon: undefined,
         roles: ['admin'],

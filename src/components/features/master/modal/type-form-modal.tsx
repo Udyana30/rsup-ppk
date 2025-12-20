@@ -54,7 +54,7 @@ export function TypeFormModal({ initialData, onSuccess }: TypeFormModalProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Nama Tipe Dokumen</label>
+        <label className="block text-sm font-medium text-gray-700">Nama Jenis Dokumen</label>
         <Input
           required
           value={name}
@@ -65,7 +65,7 @@ export function TypeFormModal({ initialData, onSuccess }: TypeFormModalProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Kode Tipe</label>
+        <label className="block text-sm font-medium text-gray-700">Kode Jenis Dokumen</label>
         <Input
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}

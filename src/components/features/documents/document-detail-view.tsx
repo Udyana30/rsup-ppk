@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useDocumentHistory } from '@/hooks/documents/use-document-history'
 import { useAdmin } from '@/hooks/auth/use-admin'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,16 +29,28 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   const supabase = createClient()
   const { deleteDocument, isProcessing } = useDocumentActions()
   const { isAdmin, isLoading: isAdminLoading } = useAdmin()
+  
+  const { versions, logs, isLoading: isHistoryLoading, refresh: refreshHistory } = useDocumentHistory(documentId)
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  const calculateNextVersion = () => {
+    if (!document) return '1'
+    const currentVer = parseInt(document.version || '0')
+    const maxHistoryVer = versions.reduce((max, v) => Math.max(max, parseInt(v.version)), 0)
+    return String(Math.max(currentVer, maxHistoryVer) + 1)
+  }
+
+  const nextVersion = calculateNextVersion()
 
   const fetchDoc = async () => {
     try {
       const { data, error } = await documentService.getDocumentById(supabase, documentId)
       if (error) throw error
       setDocument(data as unknown as PpkDocument)
+      refreshHistory()
       router.refresh()
     } catch (e) {
       console.error(e)
@@ -198,6 +211,13 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           <DocumentHistoryModal
             documentId={document.id}
             currentVersion={document.version || '1'} 
+            versions={versions}
+            logs={logs}
+            isLoading={isHistoryLoading}
+            refresh={() => {
+              refreshHistory()
+              fetchDoc()
+            }}
             onSuccess={() => {
               setModalMode(null)
               fetchDoc()
@@ -207,6 +227,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           <EditDocumentModal
             document={document}
             mode={modalMode as 'edit' | 'version'}
+            nextVersion={nextVersion}
             onSuccess={() => {
               setModalMode(null)
               fetchDoc()
