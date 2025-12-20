@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { MasterDataTable } from './master-data-table'
 import { GroupFormModal } from './modal/group-form-modal'
 import { useMasterGroups } from '@/hooks/master/use-master-groups'
+import { useAdmin } from '@/hooks/auth/use-admin'
 import { MedicalStaffGroup } from '@/types'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
@@ -12,6 +13,7 @@ const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Moda
 
 export function GroupsClientView({ initialData }: { initialData: MedicalStaffGroup[] }) {
   const { deleteGroup, isProcessing } = useMasterGroups()
+  const { isAdmin, isLoading: isAdminLoading } = useAdmin()
   const [data, setData] = useState(initialData)
   const [search, setSearch] = useState('')
 
@@ -53,6 +55,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
         onDelete={(id) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Deskripsi"
+        isAdmin={!!isAdmin && !isAdminLoading}
       />
 
       <Modal

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { MasterDataTable } from './master-data-table'
 import { TypeFormModal } from './modal/type-form-modal'
 import { useMasterTypes } from '@/hooks/master/use-master-types'
+import { useAdmin } from '@/hooks/auth/use-admin'
 import { PpkType } from '@/types'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
@@ -12,6 +13,7 @@ const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Moda
 
 export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
   const { deleteType, isProcessing } = useMasterTypes()
+  const { isAdmin, isLoading: isAdminLoading } = useAdmin()
   const [data, setData] = useState(initialData)
   const [search, setSearch] = useState('')
 
@@ -53,6 +55,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
         onDelete={(id) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Kode"
+        isAdmin={!!isAdmin && !isAdminLoading}
       />
 
       <Modal

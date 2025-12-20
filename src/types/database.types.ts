@@ -117,7 +117,6 @@ export interface Database {
           validation_date: string | null
           archived_at: string
           archived_by: string | null
-          change_log: string | null
         }
         Insert: {
           id?: string
@@ -132,7 +131,6 @@ export interface Database {
           validation_date?: string | null
           archived_at?: string
           archived_by?: string | null
-          change_log?: string | null
         }
         Update: {
           id?: string
@@ -147,7 +145,6 @@ export interface Database {
           validation_date?: string | null
           archived_at?: string
           archived_by?: string | null
-          change_log?: string | null
         }
         Relationships: [
           {
@@ -159,6 +156,46 @@ export interface Database {
           {
             foreignKeyName: "ppk_document_versions_archived_by_fkey"
             columns: ["archived_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ppk_document_logs: {
+        Row: {
+          id: string
+          document_id: string
+          user_id: string | null
+          action_type: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          document_id: string
+          user_id?: string | null
+          action_type: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          document_id?: string
+          user_id?: string | null
+          action_type?: string
+          description?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ppk_document_logs_document_id_fkey"
+            columns: ["document_id"]
+            referencedRelation: "ppk_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ppk_document_logs_user_id_fkey"
+            columns: ["user_id"]
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
@@ -246,6 +283,9 @@ export interface Database {
           p_new_version: string
           p_new_description: string
           p_new_validation_date: string
+          p_new_group_id: string
+          p_new_type_id: string
+          p_new_is_active: boolean
           p_change_log: string
         }
         Returns: void

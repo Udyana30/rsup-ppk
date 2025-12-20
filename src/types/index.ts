@@ -23,6 +23,10 @@ export type DocumentVersion = Database['public']['Tables']['ppk_document_version
   profiles?: Pick<Profile, 'full_name'> | null
 }
 
+export type DocumentLog = Database['public']['Tables']['ppk_document_logs']['Row'] & {
+  profiles?: Pick<Profile, 'full_name'> | null
+}
+
 export interface SidebarItem {
   title: string
   href: string

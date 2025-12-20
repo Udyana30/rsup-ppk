@@ -66,6 +66,9 @@ export function useDocumentActions() {
         p_new_version: nextVersion,
         p_new_description: newData.description || '',
         p_new_validation_date: newData.validation_date,
+        p_new_group_id: newData.group_id || oldDoc.group_id,
+        p_new_type_id: newData.type_id || oldDoc.type_id,
+        p_new_is_active: newData.is_active ?? oldDoc.is_active,
         p_change_log: 'Pembaruan versi dokumen'
       })
 
@@ -101,6 +104,24 @@ export function useDocumentActions() {
     }
   }
 
+  const deleteVersion = async (versionId: string) => {
+    setIsProcessing(true)
+    try {
+      const { error } = await documentService.deleteVersion(supabase, versionId)
+      if (error) throw error
+
+      router.refresh()
+      toast({ title: 'Berhasil', message: 'Arsip versi berhasil dihapus', type: 'success' })
+      return true
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Gagal', message: 'Gagal menghapus arsip versi', type: 'error' })
+      return false
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   const deleteDocument = async (documentId: string) => {
     setIsProcessing(true)
     try {
@@ -117,5 +138,5 @@ export function useDocumentActions() {
     }
   }
 
-  return { editMetadata, createNewVersion, restoreVersion, deleteDocument, isProcessing }
+  return { editMetadata, createNewVersion, restoreVersion, deleteVersion, deleteDocument, isProcessing }
 }

@@ -40,11 +40,22 @@ export async function adminCreateUser(formData: { username: string, fullName: st
   return { success: true, tempPassword: password, username: username }
 }
 
-export async function adminUpdateUser(userId: string, data: { fullName?: string, role?: string, isActive?: boolean }) {
+export async function adminUpdateUser(userId: string, data: { fullName?: string, username?: string, role?: string, isActive?: boolean }) {
+  const { data: currentProfile, error: fetchError } = await supabaseAdmin
+    .from('profiles')
+    .select('username')
+    .eq('id', userId)
+    .single()
+
+  if (fetchError) {
+    return { success: false, error: fetchError.message }
+  }
+
   const { error: profileError } = await supabaseAdmin
     .from('profiles')
     .update({
       full_name: data.fullName,
+      username: data.username,
       role: data.role,
       is_active: data.isActive
     })
@@ -54,16 +65,34 @@ export async function adminUpdateUser(userId: string, data: { fullName?: string,
     return { success: false, error: profileError.message }
   }
 
+  const userMetadataUpdates: any = {
+    full_name: data.fullName,
+    role: data.role
+  }
+
+  if (data.username) {
+    userMetadataUpdates.username = data.username
+  }
+
   const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      full_name: data.fullName,
-      role: data.role
-    },
+    user_metadata: userMetadataUpdates,
     ban_duration: data.isActive === false ? '876000h' : 'none'
   })
 
   if (authError) {
     return { success: false, error: authError.message }
+  }
+
+  if (data.username && currentProfile.username !== data.username) {
+    const newEmail = formatUsernameToEmail(data.username)
+    const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      email: newEmail,
+      email_confirm: true
+    })
+
+    if (emailError) {
+      return { success: false, error: `Profile updated but email sync failed: ${emailError.message}` }
+    }
   }
 
   return { success: true }

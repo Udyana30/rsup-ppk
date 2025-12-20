@@ -1,19 +1,27 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
-import { DocumentVersion } from '@/types'
+import { DocumentVersion, DocumentLog } from '@/types'
 
 export function useDocumentHistory(documentId: string) {
   const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [logs, setLogs] = useState<DocumentLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
-  const fetchVersions = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await documentService.getDocumentVersions(supabase, documentId)
-      if (error) throw error
-      setVersions(data as unknown as DocumentVersion[])
+      const [versionsRes, logsRes] = await Promise.all([
+        documentService.getDocumentVersions(supabase, documentId),
+        documentService.getDocumentLogs(supabase, documentId)
+      ])
+
+      if (versionsRes.error) throw versionsRes.error
+      if (logsRes.error) throw logsRes.error
+
+      setVersions(versionsRes.data as unknown as DocumentVersion[])
+      setLogs(logsRes.data as unknown as DocumentLog[])
     } catch (error) {
       console.error(error)
     } finally {
@@ -22,8 +30,8 @@ export function useDocumentHistory(documentId: string) {
   }, [documentId, supabase])
 
   useEffect(() => {
-    fetchVersions()
-  }, [fetchVersions])
+    fetchData()
+  }, [fetchData])
 
-  return { versions, isLoading, refresh: fetchVersions }
+  return { versions, logs, isLoading, refresh: fetchData }
 }

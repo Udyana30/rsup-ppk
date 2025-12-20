@@ -23,18 +23,34 @@ export function useLogin() {
     const emailPayload = formatUsernameToEmail(username)
 
     try {
-      const { error } = await authService.signIn(supabase, { 
+      const { data: authData, error: authError } = await authService.signIn(supabase, { 
         email: emailPayload, 
         password 
       })
       
-      if (error) {
+      if (authError || !authData.user) {
         throw new Error('Username atau Password salah')
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, is_super_admin')
+        .eq('id', authData.user.id)
+        .single()
+
+      if (profileError) {
+        await supabase.auth.signOut()
+        throw new Error('Gagal memverifikasi profil pengguna')
+      }
+
+      if (profile?.role !== 'admin' && !profile?.is_super_admin) {
+        await supabase.auth.signOut()
+        throw new Error('Akses ditolak. Website ini khusus untuk Administrator.')
       }
 
       toast({
         title: 'Login Berhasil',
-        message: 'Selamat datang kembali di sistem PPK',
+        message: 'Selamat datang di Dashboard Admin',
         type: 'success'
       })
 
@@ -43,6 +59,11 @@ export function useLogin() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat login'
       setError(message)
+      
+      if (message !== 'Username atau Password salah') {
+        await supabase.auth.signOut()
+      }
+
       toast({
         title: 'Login Gagal',
         message: message,

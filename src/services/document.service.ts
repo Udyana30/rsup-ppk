@@ -38,7 +38,18 @@ export const documentService = {
         profiles:archived_by (full_name)
       `)
       .eq('document_id', documentId)
-      .order('archived_at', { ascending: false })
+      .order('version', { ascending: false })
+  },
+
+  async getDocumentLogs(client: SupabaseClient<Database>, documentId: string) {
+    return client
+      .from('ppk_document_logs')
+      .select(`
+        *,
+        profiles:user_id (full_name)
+      `)
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false })
   },
 
   async createDocument(
@@ -72,6 +83,13 @@ export const documentService = {
 
     if (error) throw error
     return data
+  },
+
+  async deleteVersion(client: SupabaseClient<Database>, versionId: string) {
+    return client
+      .from('ppk_document_versions')
+      .delete()
+      .eq('id', versionId)
   },
 
   async restoreVersion(

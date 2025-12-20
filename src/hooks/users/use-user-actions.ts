@@ -1,9 +1,7 @@
-'use client'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { adminCreateUser, adminDeleteUser, adminUpdateUser } from '@/actions/auth-admin'
 import { useToast } from '@/contexts/toast-context'
+import { adminCreateUser, adminUpdateUser, adminDeleteUser } from '@/actions/auth-admin'
 
 export function useUserActions() {
   const [isProcessing, setIsProcessing] = useState(false)
@@ -13,16 +11,20 @@ export function useUserActions() {
   const createUser = async (data: { username: string, fullName: string, role: string }) => {
     setIsProcessing(true)
     try {
-      const res = await adminCreateUser(data)
-      if (!res.success) throw new Error(res.error)
+      const result = await adminCreateUser(data)
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
-      router.refresh()
       toast({
         title: 'User Berhasil Dibuat',
-        message: `Username: ${res.username} | Password: ${res.tempPassword}`,
+        message: `Password sementara: ${result.tempPassword}`,
         type: 'success',
         duration: 10000 
       })
+      
+      router.refresh()
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Gagal membuat user'
@@ -33,14 +35,17 @@ export function useUserActions() {
     }
   }
 
-  const updateUser = async (userId: string, data: { fullName?: string, role?: string, isActive?: boolean }) => {
+  const updateUser = async (userId: string, data: { fullName: string, username: string, role: string, isActive: boolean }) => {
     setIsProcessing(true)
     try {
-      const res = await adminUpdateUser(userId, data)
-      if (!res.success) throw new Error(res.error)
+      const result = await adminUpdateUser(userId, data)
 
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+
+      toast({ title: 'Berhasil', message: 'Data user diperbarui', type: 'success' })
       router.refresh()
-      toast({ title: 'Berhasil', message: 'Data user berhasil diperbarui', type: 'success' })
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Gagal update user'
@@ -54,11 +59,14 @@ export function useUserActions() {
   const deleteUser = async (userId: string) => {
     setIsProcessing(true)
     try {
-      const res = await adminDeleteUser(userId)
-      if (!res.success) throw new Error(res.error)
+      const result = await adminDeleteUser(userId)
+      
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
+      toast({ title: 'Berhasil', message: 'User dihapus permanen', type: 'success' })
       router.refresh()
-      toast({ title: 'Berhasil', message: 'User berhasil dihapus permanen', type: 'success' })
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Gagal menghapus user'

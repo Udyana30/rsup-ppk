@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
 import { PpkDocument } from '@/types'
-import { useAuth } from '@/hooks/auth/use-auth'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useAdmin } from '@/hooks/auth/use-admin'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -26,8 +26,8 @@ interface DocumentDetailViewProps {
 export function DocumentDetailView({ documentId, initialDocument }: DocumentDetailViewProps) {
   const router = useRouter()
   const supabase = createClient()
-  const { user } = useAuth()
   const { deleteDocument, isProcessing } = useDocumentActions()
+  const { isAdmin, isLoading: isAdminLoading } = useAdmin() // Use Loading state
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
@@ -86,7 +86,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
                 <Badge variant={document.is_active ? 'success' : 'outline'}>
                   {document.is_active ? 'Aktif' : 'Draft/Arsip'}
                 </Badge>
-                <Badge variant="default">Ver. {document.version || '1.0'}</Badge>
+                <Badge variant="default">Ver. {document.version || '1'}</Badge>
               </div>
             </div>
           </div>
@@ -125,24 +125,29 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={() => setModalMode('edit')}
-            disabled={isProcessing}
-            className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-sm hover:bg-[#368f6b]"
-          >
-            <Pencil className="h-5 w-5" />
-            Edit Metadata
-          </Button>
-
-          <div className="grid grid-cols-2 gap-3">
+          {/* Menu Edit hanya tampil jika Admin dan Loading selesai */}
+          {!isAdminLoading && isAdmin && (
             <Button
-              onClick={() => setModalMode('version')}
+              onClick={() => setModalMode('edit')}
               disabled={isProcessing}
-              className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+              className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-sm hover:bg-[#368f6b]"
             >
-              <GitBranch className="h-6 w-6" />
-              Update Versi
+              <Pencil className="h-5 w-5" />
+              Edit Metadata
             </Button>
+          )}
+
+          <div className={`grid ${(!isAdminLoading && isAdmin) ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+            {!isAdminLoading && isAdmin && (
+              <Button
+                onClick={() => setModalMode('version')}
+                disabled={isProcessing}
+                className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+              >
+                <GitBranch className="h-6 w-6" />
+                Update Versi
+              </Button>
+            )}
 
             <Button
               onClick={() => setModalMode('history')}
@@ -155,15 +160,17 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
             </Button>
           </div>
 
-          <Button
-            onClick={() => setIsDeleteDialogOpen(true)}
-            disabled={isProcessing}
-            variant="destructive"
-            className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
-          >
-            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
-            Hapus Dokumen
-          </Button>
+          {!isAdminLoading && isAdmin && (
+            <Button
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isProcessing}
+              variant="destructive"
+              className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
+            >
+              {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
+              Hapus Dokumen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -191,6 +198,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         {modalMode === 'history' ? (
           <DocumentHistoryModal
             documentId={document.id}
+            currentVersion={document.version || '1'} 
             onSuccess={() => {
               setModalMode(null)
               fetchDoc()

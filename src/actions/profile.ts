@@ -39,9 +39,6 @@ export async function updateProfile(userId: string, data: { fullName: string; us
     const emailUpdateRes = await adminUpdateUserEmail(userId, newEmail)
     
     if (!emailUpdateRes.success) {
-      // Note: Profile is updated but email sync failed. 
-      // Ideally we might want to rollback profile update or warn user.
-      // For now, we return error.
       return { success: false, error: `Profil diperbarui tapi gagal sync email: ${emailUpdateRes.error}` }
     }
   }
@@ -61,5 +58,49 @@ export async function changePassword(newPassword: string) {
     return { success: false, error: updateError.message }
   }
 
+  return { success: true }
+}
+
+export async function adminUpdateUserProfile(userId: string, data: { fullName: string; username: string; role: 'admin' | 'user'; isActive: boolean }) {
+  const supabase = await createClient()
+
+  // 1. Get current profile to check username
+  const { data: currentProfile, error: fetchError } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', userId)
+    .single()
+
+  if (fetchError) {
+    return { success: false, error: fetchError.message }
+  }
+
+  // 2. Update Profile Data
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: data.fullName,
+      username: data.username,
+      role: data.role,
+      is_active: data.isActive,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId)
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  // 3. Sync Email if username changed
+  if (currentProfile.username !== data.username) {
+    const newEmail = formatUsernameToEmail(data.username)
+    const emailUpdateRes = await adminUpdateUserEmail(userId, newEmail)
+    
+    if (!emailUpdateRes.success) {
+       return { success: false, error: `Profil diperbarui tapi gagal sync email: ${emailUpdateRes.error}` }
+    }
+  }
+  
+  revalidatePath('/dashboard/users')
   return { success: true }
 }

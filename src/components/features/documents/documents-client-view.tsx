@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { useAdmin } from '@/hooks/auth/use-admin'
 import { PpkDocument } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { DocumentFilters } from '@/components/features/documents/document-filters'
-import { Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, Loader2, User } from 'lucide-react'
+import { exportDocumentsToExcel } from '@/lib/excel-exporter'
+import { 
+  Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, 
+  User, GitBranch, FileClock, FileSpreadsheet, Loader2 
+} from 'lucide-react'
 
 const UploadFormModal = dynamic(() =>
     import('@/components/features/documents/modal/upload-form-modal').then(mod => mod.UploadFormModal)
@@ -30,6 +35,7 @@ interface DocumentsClientViewProps {
 export function DocumentsClientView({ initialDocuments }: DocumentsClientViewProps) {
     const router = useRouter()
     const { deleteDocument, isProcessing } = useDocumentActions()
+    const { isAdmin, isLoading: isAdminLoading } = useAdmin()
 
     const [documents, setDocuments] = useState<PpkDocument[]>(initialDocuments)
     const [search, setSearch] = useState('')
@@ -42,6 +48,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
     const [isCreateOpen, setIsCreateOpen] = useState(false)
     const [editingDoc, setEditingDoc] = useState<PpkDocument | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
+    const [isExporting, setIsExporting] = useState(false)
 
     useEffect(() => {
         setDocuments(initialDocuments)
@@ -67,6 +74,17 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
         return matchSearch && matchGroup && matchType && matchStatus && matchDate
     })
 
+    const handleExport = async () => {
+        setIsExporting(true)
+        try {
+            await exportDocumentsToExcel(filteredDocs)
+        } catch (error) {
+            console.error('Export failed:', error)
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
     const handleDeleteConfirm = async () => {
         if (!deleteId) return
         const success = await deleteDocument(deleteId)
@@ -86,7 +104,6 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
         router.refresh()
     }
 
-    // Column widths
     const colWidths = {
         title: 'w-[35%]',
         category: 'w-[20%]',
@@ -103,12 +120,32 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                     <p className="text-gray-500">Kelola dan distribusikan panduan praktik klinis.</p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
                         Total Dokumen: <span className="text-[#41A67E]">{documents.length}</span>
+                        <span className="mx-2 text-gray-300">|</span>
+                        Tampil: <span className="text-blue-600">{filteredDocs.length}</span>
                     </p>
                 </div>
-                <Button onClick={() => setIsCreateOpen(true)} className="bg-[#41A67E] hover:bg-[#368f6b] shadow-sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Tambah Dokumen
-                </Button>
+                
+                <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={handleExport} 
+                        disabled={isExporting || filteredDocs.length === 0}
+                        className="group h-10 gap-2 border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
+                    >
+                        {isExporting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <FileSpreadsheet className="h-4 w-4 text-gray-400 transition-colors group-hover:text-emerald-600" />
+                        )}
+                        <span>Export Excel</span>
+                    </Button>
+
+                    {!isAdminLoading && isAdmin && (
+                        <Button onClick={() => setIsCreateOpen(true)} className="h-10 bg-[#41A67E] hover:bg-[#368f6b] shadow-sm">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah Dokumen
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm shrink-0">
@@ -139,7 +176,9 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                                 <th className={`px-6 py-4 font-bold ${colWidths.category}`}>Kategori</th>
                                 <th className={`px-6 py-4 font-bold ${colWidths.status}`}>Status</th>
                                 <th className={`px-6 py-4 font-bold ${colWidths.date}`}>Tanggal</th>
-                                <th className={`px-6 py-4 text-right font-bold ${colWidths.action}`}>Aksi</th>
+                                <th className={`px-6 py-4 text-right font-bold ${colWidths.action}`}>
+                                    {isAdmin ? 'Aksi' : ''}
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 block overflow-y-auto max-h-[calc(100vh-320px)] w-full">
@@ -183,29 +222,31 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                                         })}
                                     </td>
                                     <td className={`px-6 py-4 text-right ${colWidths.action}`}>
-                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={(e) => handleEditClick(e, doc)}
-                                                className="h-8 w-8 p-0 text-[#41A67E] border-[#41A67E]"
-                                                title="Edit Data"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="destructive"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setDeleteId(doc.id)
-                                                }}
-                                                className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
-                                                title="Hapus"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                        {isAdmin && (
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={(e) => handleEditClick(e, doc)}
+                                                    className="h-8 w-8 p-0 text-[#41A67E] border-[#41A67E]"
+                                                    title="Edit Data"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setDeleteId(doc.id)
+                                                    }}
+                                                    className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
+                                                    title="Hapus"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
