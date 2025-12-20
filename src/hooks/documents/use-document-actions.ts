@@ -55,15 +55,12 @@ export function useDocumentActions() {
         publicId = uploadRes.public_id
       }
 
-      const nextVersion = String(Number(oldDoc.version || '1') + 1)
-
       const { error } = await supabase.rpc('update_document_version', {
         p_document_id: oldDoc.id,
         p_user_id: newData.uploaded_by,
         p_new_title: newData.title || oldDoc.title,
         p_new_file_url: fileUrl,
         p_new_public_id: publicId || '',
-        p_new_version: nextVersion,
         p_new_description: newData.description || '',
         p_new_validation_date: newData.validation_date,
         p_new_group_id: newData.group_id || oldDoc.group_id,
@@ -75,7 +72,7 @@ export function useDocumentActions() {
       if (error) throw error
 
       router.refresh()
-      toast({ title: 'Berhasil', message: `Versi ${nextVersion} diterbitkan`, type: 'success' })
+      toast({ title: 'Berhasil', message: `Versi baru terbitkan`, type: 'success' })
       return true
     } catch (error) {
       console.error(error)

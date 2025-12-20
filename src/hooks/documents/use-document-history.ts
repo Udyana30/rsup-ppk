@@ -23,15 +23,17 @@ export function useDocumentHistory(documentId: string) {
       setVersions(versionsRes.data as unknown as DocumentVersion[])
       setLogs(logsRes.data as unknown as DocumentLog[])
     } catch (error) {
-      console.error(error)
+      console.error("Error fetching history:", error)
     } finally {
       setIsLoading(false)
     }
   }, [documentId, supabase])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (documentId) {
+        fetchData()
+    }
+  }, [fetchData, documentId])
 
   return { versions, logs, isLoading, refresh: fetchData }
 }

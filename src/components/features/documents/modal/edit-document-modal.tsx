@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { useCategories } from '@/hooks/master/use-categories'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
+import { documentService } from '@/services/document.service'
 import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText, Calendar } from 'lucide-react'
+import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText, Calendar, GitBranch } from 'lucide-react'
 import { PpkDocument } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +19,7 @@ interface EditDocumentModalProps {
 }
 
 export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentModalProps) {
+  const supabase = createClient()
   const { groups, types } = useCategories()
   const { editMetadata, createNewVersion, isProcessing } = useDocumentActions()
   const { user } = useAuth()
@@ -28,11 +31,30 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
   const [groupId, setGroupId] = useState(document.group_id || '')
   const [typeId, setTypeId] = useState(document.type_id || '')
   const [isActive, setIsActive] = useState(document.is_active)
+  
+  const [predictedVersion, setPredictedVersion] = useState<string | null>(null)
+  const [isCalculating, setIsCalculating] = useState(false)
 
-  const currentVersion = Number(document.version || '1')
-  const displayVersion = mode === 'version' ? String(currentVersion + 1) : String(currentVersion)
-
+  const currentVersion = document.version || '1'
   const existingFileName = decodeURIComponent(document.file_url.split('/').pop() || 'Dokumen.pdf')
+
+  useEffect(() => {
+    const fetchNextVersion = async () => {
+      if (mode === 'version') {
+        setIsCalculating(true)
+        try {
+          const nextVer = await documentService.getNextVersionNumber(supabase, document.id)
+          setPredictedVersion(nextVer)
+        } catch (error) {
+          console.error('Gagal menghitung versi', error)
+        } finally {
+          setIsCalculating(false)
+        }
+      }
+    }
+
+    fetchNextVersion()
+  }, [mode, document.id, supabase])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -65,11 +87,16 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
           <FileText className="h-5 w-5 text-blue-600" />
         </div>
         <div>
-          <span className="block font-bold uppercase tracking-wide">{mode === 'edit' ? 'Mode Edit Metadata' : 'Mode Update Versi'}</span>
+          <span className="block font-bold uppercase tracking-wide">
+            {mode === 'edit' ? 'Mode Edit Metadata' : 'Mode Update Versi'}
+          </span>
           <span className="opacity-90">
             {mode === 'edit'
               ? 'Perubahan akan disimpan langsung pada dokumen ini.'
-              : `Sistem akan membuat dokumen baru Versi ${displayVersion} dan mengarsipkan Versi ${currentVersion}.`}
+              : isCalculating 
+                ? 'Menghitung nomor versi selanjutnya...'
+                : `Sistem akan menerbitkan Versi ${predictedVersion} dan mengarsipkan Versi ${currentVersion}.`
+            }
           </span>
         </div>
       </div>
@@ -86,8 +113,24 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Versi</label>
-          <div className="flex h-11 w-full items-center justify-center rounded-md border border-gray-200 bg-gray-100 font-bold text-gray-500">
-            {displayVersion}
+          <div className={cn(
+            "flex h-11 w-full items-center justify-center gap-2 rounded-md border text-sm font-bold",
+            mode === 'version' 
+              ? "border-blue-200 bg-blue-50 text-blue-700" 
+              : "border-gray-200 bg-gray-100 text-gray-500"
+          )}>
+            {mode === 'version' ? (
+              isCalculating ? (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              ) : (
+                <>
+                  <GitBranch className="h-4 w-4" />
+                  <span>v{predictedVersion}</span>
+                </>
+              )
+            ) : (
+              <span>v{currentVersion}</span>
+            )}
           </div>
         </div>
       </div>
@@ -157,7 +200,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
             className={cn(
               "flex h-11 w-full cursor-pointer items-center justify-between rounded-md border px-4 transition-all",
               isActive
-                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]"
+                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]" 
                 : "border-gray-300 bg-gray-50 text-gray-500"
             )}
           >
@@ -222,7 +265,7 @@ export function EditDocumentModal({ document, mode, onSuccess }: EditDocumentMod
       <div className="flex justify-end pt-4">
         <Button
           type="submit"
-          disabled={isProcessing}
+          disabled={isProcessing || (mode === 'version' && isCalculating)}
           className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
         >
           {isProcessing ? (

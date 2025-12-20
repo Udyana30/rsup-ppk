@@ -280,7 +280,6 @@ export interface Database {
           p_new_title: string
           p_new_file_url: string
           p_new_public_id: string
-          p_new_version: string
           p_new_description: string
           p_new_validation_date: string
           p_new_group_id: string

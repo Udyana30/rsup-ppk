@@ -27,7 +27,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   const router = useRouter()
   const supabase = createClient()
   const { deleteDocument, isProcessing } = useDocumentActions()
-  const { isAdmin, isLoading: isAdminLoading } = useAdmin() // Use Loading state
+  const { isAdmin, isLoading: isAdminLoading } = useAdmin()
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
@@ -125,7 +125,6 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         </div>
 
         <div className="flex flex-col gap-3">
-          {/* Menu Edit hanya tampil jika Admin dan Loading selesai */}
           {!isAdminLoading && isAdmin && (
             <Button
               onClick={() => setModalMode('edit')}
