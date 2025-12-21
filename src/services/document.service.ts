@@ -5,9 +5,6 @@ type DocumentInsert = Database['public']['Tables']['ppk_documents']['Insert']
 type DocumentUpdate = Database['public']['Tables']['ppk_documents']['Update']
 
 export const documentService = {
-  // ... (fungsi getDocuments, getDocumentById, getDocumentVersions, getDocumentLogs, getNextVersionNumber, createDocument, updateDocument TETAP SAMA)
-
-  // 1. GET ALL DOCUMENTS
   async getDocuments(client: SupabaseClient<Database>) {
     return client
       .from('ppk_documents')
@@ -104,14 +101,15 @@ export const documentService = {
   },
 
   async deleteDocument(client: SupabaseClient<Database>, id: string) {
-
-    const { data } = await client.functions.invoke('delete-document', {
-      body: { documentId: id },
+    const { data, error } = await client.functions.invoke('delete-document', {
+      body: JSON.stringify({ documentId: id }),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       }
     })
+
+    if (error) throw error
 
     return data
   },

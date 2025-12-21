@@ -14,13 +14,13 @@ export function Sidebar() {
   const { isCollapsed, toggleSidebar } = useSidebar()
 
   return (
-    <div 
+    <div
       className={cn(
         "flex h-full flex-col border-r bg-white transition-[width] duration-300 ease-in-out will-change-[width]",
         isCollapsed ? "w-20" : "w-72"
       )}
     >
-      <button 
+      <button
         onClick={toggleSidebar}
         className={cn(
           "flex h-20 items-center w-full border-b transition-all duration-300 hover:bg-gray-50 focus:outline-none overflow-hidden",
@@ -28,11 +28,11 @@ export function Sidebar() {
         )}
         title={isCollapsed ? "Buka Sidebar" : "Tutup Sidebar"}
       >
-        <div className="flex items-center gap-3">
+        <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-3")}>
           <div className="relative h-8 w-8 shrink-0">
-            <Image 
-              src="/logo.svg" 
-              alt="Logo RSUP" 
+            <Image
+              src="/logo.svg"
+              alt="Logo RSUP"
               fill
               className="object-contain"
             />
@@ -66,6 +66,7 @@ export function Sidebar() {
 
 function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem, isCollapsed: boolean }) {
   const pathname = usePathname()
+  const { toggleSidebar } = useSidebar()
   const isActive = pathname === item.href || (item.children && item.children.some(c => pathname === c.href))
   const [isOpen, setIsOpen] = useState(isActive)
 
@@ -75,17 +76,24 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem, isCollapsed
     return (
       <div className="space-y-1">
         <button
-          onClick={() => !isCollapsed && setIsOpen(!isOpen)}
+          onClick={() => {
+            if (isCollapsed) {
+              toggleSidebar()
+              setIsOpen(true)
+            } else {
+              setIsOpen(!isOpen)
+            }
+          }}
           className={cn(
             'group flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 overflow-hidden whitespace-nowrap',
-            isActive 
-              ? 'bg-[#41A67E]/10 text-[#41A67E]' 
+            isActive
+              ? 'bg-[#41A67E]/10 text-[#41A67E]'
               : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700',
             isCollapsed && 'justify-center px-2'
           )}
           title={isCollapsed ? item.title : undefined}
         >
-          <div className="flex items-center gap-3">
+          <div className={cn("flex items-center", isCollapsed ? "gap-0" : "gap-3")}>
             {Icon && <Icon className={cn("h-5 w-5 shrink-0 transition-colors", isActive ? "text-[#41A67E]" : "text-gray-500 group-hover:text-gray-700")} />}
             <span className={cn(
               "transition-all duration-300 ease-in-out overflow-hidden",
@@ -93,17 +101,17 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem, isCollapsed
             )}>
               {item.title}
             </span>
-          </div> 
-          
-          <ChevronDown 
+          </div>
+
+          <ChevronDown
             className={cn(
               "h-4 w-4 text-gray-400 transition-all duration-300 ease-in-out shrink-0",
               isOpen ? "rotate-180" : "",
               isCollapsed ? "w-0 opacity-0" : "w-4 opacity-100"
-            )} 
+            )}
           />
         </button>
-        
+
         <div className={cn(
           "grid transition-all duration-300 ease-in-out overflow-hidden",
           isOpen && !isCollapsed ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
@@ -117,7 +125,7 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem, isCollapsed
                   className={cn(
                     'flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 whitespace-nowrap',
                     pathname === child.href
-                      ? 'text-[#41A67E] bg-[#41A67E]/5' 
+                      ? 'text-[#41A67E] bg-[#41A67E]/5'
                       : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                   )}
                 >
@@ -135,11 +143,11 @@ function SidebarMenuItem({ item, isCollapsed }: { item: SidebarItem, isCollapsed
     <Link
       href={item.href}
       className={cn(
-        'group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 overflow-hidden whitespace-nowrap',
-        isActive 
-          ? 'bg-[#41A67E]/10 text-[#41A67E] font-semibold' 
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700',
-        isCollapsed && 'justify-center px-2'
+        'group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 overflow-hidden whitespace-nowrap',
+        isCollapsed ? "justify-center px-2 gap-0" : "gap-3",
+        isActive
+          ? 'bg-[#41A67E]/10 text-[#41A67E] font-semibold'
+          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
       )}
       title={isCollapsed ? item.title : undefined}
     >

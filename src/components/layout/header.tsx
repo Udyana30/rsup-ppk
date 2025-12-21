@@ -89,7 +89,7 @@ export function Header() {
                     {fullName}
                   </p>
                   <p className="text-xs font-medium text-gray-500">
-                    {profile?.role || 'Admin'}
+                    @{username}
                   </p>
                 </div>
 

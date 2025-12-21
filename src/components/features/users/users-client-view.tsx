@@ -77,7 +77,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">Manajemen Pengguna</h1>
                     <p className="text-gray-500">Kelola akun dokter dan staf admin.</p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
-                        Total Pengguna: <span className="text-[#41A67E]">{filteredUsers.length}</span>
+                        Total Pengguna Lain: <span className="text-[#41A67E]">{filteredUsers.length}</span>
                     </p>
                 </div>
                 <Button onClick={() => setIsCreateOpen(true)} className="bg-[#41A67E] hover:bg-[#368f6b] shadow-sm">

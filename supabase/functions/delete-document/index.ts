@@ -40,8 +40,22 @@ serve(async (req: Request) => {
       supabaseServiceRoleKey
     )
 
-    const { documentId } = await req.json()
+    let documentId
+    try {
+      const bodyText = await req.text()
+      console.log('Raw request body:', bodyText)
+      if (!bodyText) throw new Error('Empty request body')
+      
+      const body = JSON.parse(bodyText)
+      documentId = body.documentId
+    } catch (e) {
+      console.error('Body parsing error:', e)
+      throw new Error('Invalid request body')
+    }
+
     if (!documentId) throw new Error('Document ID is required')
+
+    console.log(`Attempting to delete document: ${documentId}`)
 
     const { data: doc, error: fetchError } = await supabaseAdmin
       .from('ppk_documents')
@@ -49,20 +63,34 @@ serve(async (req: Request) => {
       .eq('id', documentId)
       .single()
 
-    if (fetchError || !doc) throw new Error('Document not found')
+    if (fetchError || !doc) {
+      console.error('Document not found or fetch error:', fetchError)
+      throw new Error('Document not found')
+    }
 
     if (doc.cloudinary_public_id) {
-      const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME')
-      const apiKey = Deno.env.get('CLOUDINARY_API_KEY')
-      const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET')
-      const authString = btoa(`${apiKey}:${apiSecret}`)
+      try {
+        const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME')
+        const apiKey = Deno.env.get('CLOUDINARY_API_KEY')
+        const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET')
+        const authString = btoa(`${apiKey}:${apiSecret}`)
 
-      await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload?public_ids[]=${doc.cloudinary_public_id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Basic ${authString}`
+        console.log(`Deleting image from Cloudinary: ${doc.cloudinary_public_id}`)
+
+        const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload?public_ids[]=${doc.cloudinary_public_id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Basic ${authString}`
+          }
+        })
+
+        if (!cloudinaryRes.ok) {
+          const errorText = await cloudinaryRes.text()
+          console.error('Cloudinary delete failed:', errorText)
         }
-      })
+      } catch (cloudError) {
+        console.error('Error deleting from Cloudinary:', cloudError)
+      }
     }
 
     const { error: deleteError } = await supabaseAdmin
@@ -70,7 +98,12 @@ serve(async (req: Request) => {
       .delete()
       .eq('id', documentId)
 
-    if (deleteError) throw deleteError
+    if (deleteError) {
+      console.error('Database delete error:', deleteError)
+      throw deleteError
+    }
+
+    console.log(`Document ${documentId} deleted successfully`)
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -81,6 +114,7 @@ serve(async (req: Request) => {
     )
 
   } catch (error: any) {
+    console.error('Edge function error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Profile } from '@/types'
 import { useProfileActions } from '@/hooks/users/use-profile-actions'
+import { useAuth } from '@/hooks/auth/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { User, Loader2, Save } from 'lucide-react'
@@ -14,6 +15,7 @@ interface ProfileFormProps {
 
 export function ProfileForm({ profile }: ProfileFormProps) {
   const { updateProfileInfo, isProcessing } = useProfileActions()
+  const { refreshProfile } = useAuth()
 
   const [fullName, setFullName] = useState(profile.full_name || '')
   const [username, setUsername] = useState(profile.username || '')
@@ -25,7 +27,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   }
 
   const confirmUpdate = async () => {
-    await updateProfileInfo(profile.id, { fullName, username })
+    const success = await updateProfileInfo(profile.id, { fullName, username })
+    if (success) {
+      await refreshProfile()
+    }
     setShowConfirmDialog(false)
   }
 

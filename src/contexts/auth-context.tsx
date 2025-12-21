@@ -14,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -22,10 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  
+
   const mounted = useRef(false)
   const lastCheckTime = useRef(0)
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', userId)
         .single()
-      
+
       if (error) return null
       return data
     } catch {
@@ -49,11 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (session?.user) {
       setUser(session.user)
-      
+
       setProfile(prev => {
         if (prev?.id === session.user.id) return prev
         fetchProfile(session.user.id).then(data => {
-            if (mounted.current && data) setProfile(data)
+          if (mounted.current && data) setProfile(data)
         })
         return prev
       })
@@ -61,22 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       setProfile(null)
     }
-    
+
     setIsLoading(false)
   }, [fetchProfile])
 
   const checkSession = useCallback(async () => {
     const now = Date.now()
-    if (now - lastCheckTime.current < 5000) return 
-    
+    if (now - lastCheckTime.current < 5000) return
+
     lastCheckTime.current = now
 
     const { data: { session }, error } = await supabase.auth.getSession()
-    
+
     if (error || !session) {
       if (user) {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
-        
+
         if (refreshError || !refreshData.session) {
           await supabase.auth.signOut()
           handleSession(null)
@@ -124,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         checkSession()
       }
     }
-    
+
     window.addEventListener('focus', handleFocus)
     window.addEventListener('visibilitychange', handleFocus)
 
@@ -141,21 +142,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error(error)
     } finally {
-        if (mounted.current) {
-            handleSession(null)
-            router.refresh()
-            router.replace('/login')
-        }
+      if (mounted.current) {
+        handleSession(null)
+        router.refresh()
+        router.replace('/login')
+      }
     }
   }
 
   const refreshSession = async () => {
-      lastCheckTime.current = 0 
-      await checkSession()
+    lastCheckTime.current = 0
+    await checkSession()
+  }
+
+  const refreshProfile = async () => {
+    if (user) {
+      const data = await fetchProfile(user.id)
+      if (mounted.current && data) setProfile(data)
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, isLoading, signOut, refreshSession }}>
+    <AuthContext.Provider value={{ user, profile, isLoading, signOut, refreshSession, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
