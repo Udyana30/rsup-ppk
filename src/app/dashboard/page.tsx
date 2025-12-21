@@ -5,7 +5,7 @@ import { masterService } from '@/services/master.service'
 import { StatsCard } from '@/components/features/dashboard/stats-card'
 import { RecentDocuments } from '@/components/features/dashboard/recent-documents'
 import { RecentUsers } from '@/components/features/dashboard/recent-users'
-import { FileText, Users, Clock, Activity } from 'lucide-react'
+import { FileText, Users, Clock, Activity, Calendar } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -26,11 +26,47 @@ export default async function DashboardPage() {
   const types = typesRes.data || []
   const currentUser = currentUserRes.data
 
+  const today = new Date()
+  const day = today.getDay()
+
+  const currentDate = today.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
+  let motivationText = ""
+  if (day === 1 || day === 2) { // Mon, Tue
+    motivationText = "Siapkan kopi, mari bekerja!"
+  } else if (day === 3 || day === 4) { // Wed, Thu
+    motivationText = "Tetap fokus, weekend segera tiba."
+  } else if (day === 5) { // Fri
+    motivationText = "Tuntaskan hari ini dengan baik."
+  } else { // Sat, Sun
+    motivationText = "Rehat sejenak itu penting."
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto space-y-6 pr-2">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500">Selamat datang kembali! Berikut ringkasan sistem Anda.</p>
+    <div className="flex-1 space-y-6 px-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+          <p className="text-gray-500">
+            Selamat datang kembali, <span className="font-medium text-gray-900">{currentUser?.full_name || 'Admin'}</span>
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-2 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-[#41A67E]" />
+            <span className="text-sm font-medium text-gray-700">{currentDate}</span>
+          </div>
+          <div className="h-4 w-px bg-gray-200" />
+          <span className="text-xs text-gray-500 italic">
+            {motivationText}
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -68,11 +104,11 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-8 lg:grid-cols-7">
+        <div className="lg:col-span-4 space-y-6">
           <RecentDocuments documents={documents} />
         </div>
-        <div>
+        <div className="lg:col-span-3 space-y-6">
           <RecentUsers users={users} currentUser={currentUser} />
         </div>
       </div>

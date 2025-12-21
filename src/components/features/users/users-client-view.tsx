@@ -71,18 +71,18 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
     }
 
     return (
-        <div className="flex flex-col h-full space-y-4">
+        <div className="flex flex-col h-full space-y-4 px-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between shrink-0">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Manajemen User</h1>
-                    <p className="text-gray-500">Kelola akun dokter dan staff admin.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Manajemen Pengguna</h1>
+                    <p className="text-gray-500">Kelola akun dokter dan staf admin.</p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
-                        Total User: <span className="text-[#41A67E]">{filteredUsers.length}</span>
+                        Total Pengguna: <span className="text-[#41A67E]">{filteredUsers.length}</span>
                     </p>
                 </div>
                 <Button onClick={() => setIsCreateOpen(true)} className="bg-[#41A67E] hover:bg-[#368f6b] shadow-sm">
                     <Plus className="mr-2 h-4 w-4" />
-                    Tambah User Baru
+                    Tambah Pengguna
                 </Button>
             </div>
 
@@ -177,7 +177,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
             <Modal
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
-                title="Tambah User Baru"
+                title="Tambah Pengguna Baru"
             >
                 <CreateUserModal
                     currentUser={currentUser}
@@ -192,7 +192,7 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
                 <Modal
                     isOpen={!!editingUser}
                     onClose={() => setEditingUser(null)}
-                    title="Edit Data User"
+                    title="Edit Data Pengguna"
                 >
                     <EditUserModal
                         user={editingUser}
@@ -207,8 +207,8 @@ export function UsersClientView({ initialUsers, currentUser }: UsersClientViewPr
 
             <AlertDialog
                 isOpen={!!deleteId}
-                title="Hapus User"
-                description="Yakin ingin menghapus user ini secara permanen? Akun yang dihapus tidak dapat dipulihkan."
+                title="Hapus Pengguna"
+                description="Yakin ingin menghapus pengguna ini secara permanen? Akun yang dihapus tidak dapat dipulihkan."
                 confirmLabel="Hapus Permanen"
                 variant="destructive"
                 isProcessing={isProcessing}

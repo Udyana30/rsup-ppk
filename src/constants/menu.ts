@@ -15,25 +15,25 @@ export const MENU_ITEMS: SidebarItem[] = [
     roles: ['admin', 'user'],
   },
   {
-    title: 'Manajemen User',
+    title: 'Manajemen Pengguna',
     href: '/dashboard/users',
     icon: Users,
     roles: ['admin'],
   },
   {
-    title: 'Master Data',
+    title: 'Manajemen Master Data',
     href: '/dashboard/master',
     icon: Database,
     roles: ['admin'],
     children: [
       {
-        title: 'Kelompok Medis',
+        title: 'Kelompok Staf Medis',
         href: '/dashboard/master/groups',
         icon: undefined,
         roles: ['admin'],
       },
       {
-        title: 'Jenis Dokumen',
+        title: 'Jenis Dokumen PPK',
         href: '/dashboard/master/types',
         icon: undefined,
         roles: ['admin'],

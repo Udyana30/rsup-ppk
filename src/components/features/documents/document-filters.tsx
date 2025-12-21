@@ -59,7 +59,7 @@ export function DocumentFilters({
           variant={isExpanded ? 'primary' : 'outline'}
           onClick={() => setIsExpanded(!isExpanded)}
           className={cn(
-            "gap-2 border-gray-300 text-gray-700 hover:bg-gray-50",
+            "gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-[#41A67E] focus-visible:ring-[#41A67E]",
             (isExpanded || activeFiltersCount > 0) && "border-[#41A67E] text-[#41A67E] bg-[#41A67E]/5"
           )}
         >

@@ -11,9 +11,9 @@ import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { DocumentFilters } from '@/components/features/documents/document-filters'
 import { exportDocumentsToExcel } from '@/lib/excel-exporter'
-import { 
-  Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle, 
-  User, FileSpreadsheet, Loader2 
+import {
+    Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle,
+    User, FileSpreadsheet, Loader2
 } from 'lucide-react'
 
 const UploadFormModal = dynamic(() =>
@@ -53,6 +53,8 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
     useEffect(() => {
         setDocuments(initialDocuments)
     }, [initialDocuments])
+
+    const activeCount = documents.filter(doc => doc.is_active).length
 
     const filteredDocs = documents.filter(doc => {
         const docDate = new Date(doc.created_at)
@@ -114,21 +116,21 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
     }
 
     return (
-        <div className="flex flex-col h-full space-y-4">
+        <div className="flex flex-col h-full space-y-4 px-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dokumen PPK</h1>
                     <p className="text-gray-500">Kelola dan distribusikan panduan praktik klinis.</p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
-                        Total Dokumen: <span className="text-[#41A67E]">{documents.length}</span>
+                        Total Data Aktif: <span className="text-[#41A67E]">{activeCount}</span>
                         <span className="mx-2 text-gray-300">|</span>
                         Tampil: <span className="text-blue-600">{filteredDocs.length}</span>
                     </p>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                    <Button 
-                        onClick={handleExport} 
+                    <Button
+                        onClick={handleExport}
                         disabled={isExporting || filteredDocs.length === 0}
                         className="group h-10 gap-2 border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
                     >

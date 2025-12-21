@@ -61,7 +61,7 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingItem ? 'Edit Kelompok Medis' : 'Tambah Kelompok Medis'}
+        title={editingItem ? 'Edit Kelompok Staf Medis' : 'Tambah Kelompok Staf Medis'}
       >
         <GroupFormModal
           initialData={editingItem}

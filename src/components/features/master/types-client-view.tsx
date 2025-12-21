@@ -21,7 +21,6 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
   const [editingItem, setEditingItem] = useState<PpkType | undefined>(undefined)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  // Sync dengan server state, tapi filter 'deleted_at' untuk keamanan ganda
   useEffect(() => {
     if (initialData) {
       setData(initialData.filter(item => !item.deleted_at))
@@ -61,7 +60,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
   return (
     <>
       <MasterDataTable
-        title="Jenis Dokumen"
+        title="Jenis Dokumen PPK"
         data={activeData}
         search={search}
         setSearch={setSearch}
@@ -76,7 +75,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingItem ? 'Edit Jenis Dokumen' : 'Tambah Jenis Dokumen'}
+        title={editingItem ? 'Edit Jenis Dokumen PPK' : 'Tambah Jenis Dokumen PPK'}
       >
         <TypeFormModal
           initialData={editingItem}
@@ -86,7 +85,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
 
       <AlertDialog
         isOpen={!!deleteId}
-        title="Hapus Jenis Dokumen"
+        title="Hapus Jenis Dokumen PPK"
         description="Apakah Anda yakin ingin menghapus jenis dokumen ini?"
         confirmLabel="Hapus"
         variant="destructive"

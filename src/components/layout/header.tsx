@@ -62,12 +62,12 @@ export function Header() {
 
   return (
     <>
-      <header className="flex h-20 items-center justify-end border-b bg-white px-8 transition-all duration-300">
+      <header className="flex h-20 items-center justify-end border-b bg-white px-12 transition-all duration-300">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className={cn(
-              "group flex items-center gap-4 rounded-xl py-2 pl-3 pr-2 transition-all duration-200 focus:outline-none",
+              "group flex items-center gap-4 rounded-xl py-2 pl-4 pr-2 transition-all duration-200 focus:outline-none",
               isDropdownOpen
                 ? "bg-[#41A67E]/5 ring-1 ring-[#41A67E]/20"
                 : "hover:bg-gray-50"
