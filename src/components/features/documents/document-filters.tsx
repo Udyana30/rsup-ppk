@@ -83,6 +83,7 @@ export function DocumentFilters({
                 <Input
                   type="date"
                   value={startDate}
+                  max={endDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
@@ -96,6 +97,7 @@ export function DocumentFilters({
                 <Input
                   type="date"
                   value={endDate}
+                  min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="h-10 bg-white border-gray-300 text-gray-900 text-sm focus:border-[#41A67E] focus:ring-[#41A67E] pr-10 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />

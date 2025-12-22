@@ -2,21 +2,21 @@
 
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { useAuth } from '@/hooks/auth/use-auth'
+import { HistoryVersion } from '@/hooks/documents/use-document-history'
+import { DocumentLog } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
-import { 
-  Loader2, RotateCcw, FileText, Calendar, User, Download, 
-  Trash2, History, Activity 
+import {
+  Loader2, RotateCcw, FileText, Calendar, User, Download,
+  Trash2, History, Activity, CheckCircle2, Archive
 } from 'lucide-react'
-import { DocumentVersion, DocumentLog } from '@/types'
 import { useState } from 'react'
 
 interface DocumentHistoryModalProps {
   documentId: string
-  currentVersion: string
-  versions: DocumentVersion[]
+  history: HistoryVersion[]
   logs: DocumentLog[]
   isLoading: boolean
   refresh: () => void
@@ -25,23 +25,20 @@ interface DocumentHistoryModalProps {
 
 type TabType = 'versions' | 'logs'
 
-export function DocumentHistoryModal({ 
-  documentId, 
-  currentVersion, 
-  versions, 
-  logs, 
-  isLoading, 
+export function DocumentHistoryModal({
+  documentId,
+  history,
+  logs,
+  isLoading,
   refresh,
-  onSuccess 
+  onSuccess
 }: DocumentHistoryModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('versions')
   const { restoreVersion, deleteVersion, isProcessing } = useDocumentActions()
   const { user } = useAuth()
-  
+
   const [versionToDelete, setVersionToDelete] = useState<string | null>(null)
   const [versionToRestore, setVersionToRestore] = useState<string | null>(null)
-
-  const filteredVersions = versions.filter(v => v.version !== currentVersion)
 
   const handleRestoreConfirm = async () => {
     if (!user || !versionToRestore) return
@@ -77,8 +74,8 @@ export function DocumentHistoryModal({
           onClick={() => setActiveTab('versions')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative",
-            activeTab === 'versions' 
-              ? "text-[#41A67E]" 
+            activeTab === 'versions'
+              ? "text-[#41A67E]"
               : "text-gray-500 hover:text-gray-700"
           )}
         >
@@ -92,8 +89,8 @@ export function DocumentHistoryModal({
           onClick={() => setActiveTab('logs')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all relative",
-            activeTab === 'logs' 
-              ? "text-[#41A67E]" 
+            activeTab === 'logs'
+              ? "text-[#41A67E]"
               : "text-gray-500 hover:text-gray-700"
           )}
         >
@@ -107,35 +104,67 @@ export function DocumentHistoryModal({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {activeTab === 'versions' ? (
-          filteredVersions.length === 0 ? (
-            <EmptyState message="Tidak ada versi arsip lainnya." />
+          history.length === 0 ? (
+            <EmptyState message="Tidak ada riwayat versi." />
           ) : (
-            filteredVersions.map((ver) => (
-              <div key={ver.id} className="group relative rounded-xl border border-gray-100 bg-white p-4 transition-all hover:border-[#41A67E]/30 hover:shadow-sm">
+            history.map((item) => (
+              <div
+                key={item.id}
+                className={cn(
+                  "group relative rounded-xl border p-4 transition-all hover:shadow-sm",
+                  item.status === 'active'
+                    ? "border-[#41A67E]/30 bg-[#41A67E]/5"
+                    : "border-gray-100 bg-white hover:border-[#41A67E]/30"
+                )}
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">
-                        Versi {ver.version}
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          item.status === 'active'
+                            ? "bg-[#41A67E] text-white border-[#41A67E]"
+                            : "bg-blue-50 text-blue-700 border-blue-100"
+                        )}
+                      >
+                        Versi {item.version}
                       </Badge>
-                      <span className="text-sm font-medium text-gray-900">{ver.title}</span>
+                      <span className="text-sm font-medium text-gray-900">{item.title}</span>
+                      {item.status === 'active' && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-[#41A67E] bg-white px-2 py-0.5 rounded-full border border-[#41A67E]/20">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Active
+                        </span>
+                      )}
+                      {item.status === 'archived' && (
+                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                          <Archive className="h-3 w-3" />
+                          Archived
+                        </span>
+                      )}
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>{new Date(ver.archived_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>
+                          {item.updated_at
+                            ? new Date(item.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : '-'
+                          }
+                        </span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
-                        <span>{ver.profiles?.full_name || 'System'}</span>
+                        <span>{item.uploaded_by_name}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <a
-                      href={ver.file_url}
+                      href={item.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
@@ -143,22 +172,26 @@ export function DocumentHistoryModal({
                     >
                       <Download className="h-4 w-4" />
                     </a>
-                    
-                    <button
-                      onClick={() => setVersionToRestore(ver.id)}
-                      className="p-2 rounded-lg text-orange-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                      title="Restore Versi Ini"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </button>
 
-                    <button
-                      onClick={() => setVersionToDelete(ver.id)}
-                      className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                      title="Hapus Versi Ini"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {item.status === 'archived' && (
+                      <>
+                        <button
+                          onClick={() => setVersionToRestore(item.id)}
+                          className="p-2 rounded-lg text-orange-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                          title="Restore Versi Ini"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          onClick={() => setVersionToDelete(item.id)}
+                          className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                          title="Hapus Versi Ini"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

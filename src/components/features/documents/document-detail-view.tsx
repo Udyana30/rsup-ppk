@@ -29,8 +29,8 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   const supabase = createClient()
   const { deleteDocument, isProcessing } = useDocumentActions()
   const { isAdmin, isLoading: isAdminLoading } = useAdmin()
-  
-  const { versions, logs, isLoading: isHistoryLoading, refresh: refreshHistory } = useDocumentHistory(documentId)
+
+  const { history, logs, isLoading: isHistoryLoading, refresh: refreshHistory } = useDocumentHistory(documentId)
 
   const [document, setDocument] = useState<PpkDocument | null>(initialDocument)
   const [modalMode, setModalMode] = useState<'edit' | 'version' | 'history' | null>(null)
@@ -39,7 +39,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   const calculateNextVersion = () => {
     if (!document) return '1'
     const currentVer = parseInt(document.version || '0')
-    const maxHistoryVer = versions.reduce((max, v) => Math.max(max, parseInt(v.version)), 0)
+    const maxHistoryVer = history.reduce((max, v) => Math.max(max, parseInt(v.version)), 0)
     return String(Math.max(currentVer, maxHistoryVer) + 1)
   }
 
@@ -210,8 +210,7 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
         {modalMode === 'history' ? (
           <DocumentHistoryModal
             documentId={document.id}
-            currentVersion={document.version || '1'} 
-            versions={versions}
+            history={history}
             logs={logs}
             isLoading={isHistoryLoading}
             refresh={() => {

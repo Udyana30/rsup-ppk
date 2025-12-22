@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useLogin } from '@/hooks/auth/use-login'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, FileText, Eye, EyeOff, User } from 'lucide-react'
+import { Loader2, Eye, EyeOff, User } from 'lucide-react'
 
 export function LoginForm() {
   const { handleLogin, isLoading, error } = useLogin()
@@ -13,8 +14,13 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-[450px] space-y-8 rounded-2xl bg-white/95 p-10 shadow-2xl backdrop-blur-md ring-1 ring-black/5">
       <div className="flex flex-col items-center text-center">
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-[#41A67E]/10">
-          <FileText className="h-7 w-7 text-[#41A67E]" />
+        <div className="mb-5 relative h-16 w-16">
+          <Image
+            src="/logo.svg"
+            alt="Logo RSUP"
+            fill
+            className="object-contain"
+          />
         </div>
 
         <h2 className="text-2xl font-bold tracking-tight text-[#41A67E]">

@@ -57,6 +57,7 @@ serve(async (req: Request) => {
 
     console.log(`Attempting to delete document: ${documentId}`)
 
+    // 1. Fetch document and its versions to get all Cloudinary IDs
     const { data: doc, error: fetchError } = await supabaseAdmin
       .from('ppk_documents')
       .select('cloudinary_public_id')
@@ -68,31 +69,85 @@ serve(async (req: Request) => {
       throw new Error('Document not found')
     }
 
-    if (doc.cloudinary_public_id) {
-      try {
-        const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME')
-        const apiKey = Deno.env.get('CLOUDINARY_API_KEY')
-        const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET')
-        const authString = btoa(`${apiKey}:${apiSecret}`)
+    const { data: versions, error: versionsError } = await supabaseAdmin
+      .from('ppk_document_versions')
+      .select('cloudinary_public_id')
+      .eq('document_id', documentId)
 
-        console.log(`Deleting image from Cloudinary: ${doc.cloudinary_public_id}`)
+    if (versionsError) {
+      console.error('Error fetching versions:', versionsError)
+      throw versionsError
+    }
 
-        const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload?public_ids[]=${doc.cloudinary_public_id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Basic ${authString}`
+    // Collect all unique Cloudinary IDs
+    const publicIds = new Set<string>()
+    if (doc.cloudinary_public_id) publicIds.add(doc.cloudinary_public_id)
+    if (versions) {
+      versions.forEach(v => {
+        if (v.cloudinary_public_id) publicIds.add(v.cloudinary_public_id)
+      })
+    }
+
+    // 2. Delete images from Cloudinary
+    if (publicIds.size > 0) {
+      const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME')
+      const apiKey = Deno.env.get('CLOUDINARY_API_KEY')
+      const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET')
+      const authString = btoa(`${apiKey}:${apiSecret}`)
+
+      const idsArray = Array.from(publicIds)
+      const batchSize = 20 // Reduced to 20 to ensure URL length stays within safe limits
+      
+      for (let i = 0; i < idsArray.length; i += batchSize) {
+        const batch = idsArray.slice(i, i + batchSize)
+        const queryParams = batch.map(id => `public_ids[]=${encodeURIComponent(id)}`).join('&')
+        
+        console.log(`Deleting batch of ${batch.length} images from Cloudinary`)
+
+        try {
+          const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload?${queryParams}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Basic ${authString}`
+            }
+          })
+
+          if (!cloudinaryRes.ok) {
+            const errorText = await cloudinaryRes.text()
+            console.error('Cloudinary delete failed for batch:', errorText)
+            // We continue even if image delete fails, to ensure DB consistency
           }
-        })
-
-        if (!cloudinaryRes.ok) {
-          const errorText = await cloudinaryRes.text()
-          console.error('Cloudinary delete failed:', errorText)
+        } catch (cloudError) {
+          console.error('Error deleting from Cloudinary:', cloudError)
         }
-      } catch (cloudError) {
-        console.error('Error deleting from Cloudinary:', cloudError)
       }
     }
 
+    // 3. Delete from Database (Child records first)
+    
+    // Delete Logs
+    const { error: logsError } = await supabaseAdmin
+      .from('ppk_document_logs')
+      .delete()
+      .eq('document_id', documentId)
+
+    if (logsError) {
+      console.error('Error deleting logs:', logsError)
+      throw logsError
+    }
+
+    // Delete Versions
+    const { error: versionsDeleteError } = await supabaseAdmin
+      .from('ppk_document_versions')
+      .delete()
+      .eq('document_id', documentId)
+
+    if (versionsDeleteError) {
+      console.error('Error deleting versions:', versionsDeleteError)
+      throw versionsDeleteError
+    }
+
+    // Delete Document
     const { error: deleteError } = await supabaseAdmin
       .from('ppk_documents')
       .delete()
@@ -103,7 +158,7 @@ serve(async (req: Request) => {
       throw deleteError
     }
 
-    console.log(`Document ${documentId} deleted successfully`)
+    console.log(`Document ${documentId} and all related data deleted successfully`)
 
     return new Response(
       JSON.stringify({ success: true }),

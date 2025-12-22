@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { documentService } from '@/services/document.service'
-import { DocumentVersion, DocumentLog } from '@/types'
+import { DocumentVersion, DocumentLog, PpkDocument } from '@/types'
+
+export type HistoryVersion = {
+  id: string
+  version: string
+  title: string
+  file_url: string
+  updated_at: string
+  archived_at: string | null
+  uploaded_by_name: string
+  status: 'active' | 'archived'
+  original_data: DocumentVersion | PpkDocument
+}
 
 export function useDocumentHistory(documentId: string) {
-  const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [history, setHistory] = useState<HistoryVersion[]>([])
   const [logs, setLogs] = useState<DocumentLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
@@ -12,15 +24,53 @@ export function useDocumentHistory(documentId: string) {
   const fetchData = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [versionsRes, logsRes] = await Promise.all([
+      const [activeRes, versionsRes, logsRes] = await Promise.all([
+        documentService.getDocumentById(supabase, documentId),
         documentService.getDocumentVersions(supabase, documentId),
         documentService.getDocumentLogs(supabase, documentId)
       ])
 
+      if (activeRes.error) throw activeRes.error
       if (versionsRes.error) throw versionsRes.error
       if (logsRes.error) throw logsRes.error
 
-      setVersions(versionsRes.data as unknown as DocumentVersion[])
+      const activeDoc = activeRes.data as PpkDocument
+      const archivedVersions = versionsRes.data as unknown as DocumentVersion[]
+
+      // Transform active document to HistoryVersion
+      const activeHistoryItem: HistoryVersion = {
+        id: activeDoc.id,
+        version: activeDoc.version || '1',
+        title: activeDoc.title,
+        file_url: activeDoc.file_url,
+        updated_at: activeDoc.updated_at,
+        archived_at: null,
+        uploaded_by_name: activeDoc.profiles?.full_name || 'System',
+        status: 'active',
+        original_data: activeDoc
+      }
+
+      // Transform archived versions to HistoryVersion
+      const archivedHistoryItems: HistoryVersion[] = archivedVersions.map(v => ({
+        id: v.id,
+        version: v.version,
+        title: v.title,
+        file_url: v.file_url,
+        updated_at: v.archived_at, // Use archived_at as the "timestamp" for history view
+        archived_at: v.archived_at,
+        uploaded_by_name: v.profiles?.full_name || 'System',
+        status: 'archived',
+        original_data: v
+      }))
+
+      // Combine and sort by version number descending
+      const allHistory = [activeHistoryItem, ...archivedHistoryItems].sort((a, b) => {
+        const verA = parseFloat(a.version)
+        const verB = parseFloat(b.version)
+        return verB - verA
+      })
+
+      setHistory(allHistory)
       setLogs(logsRes.data as unknown as DocumentLog[])
     } catch (error) {
       console.error("Error fetching history:", error)
@@ -35,5 +85,5 @@ export function useDocumentHistory(documentId: string) {
     }
   }, [fetchData, documentId])
 
-  return { versions, logs, isLoading, refresh: fetchData }
+  return { history, logs, isLoading, refresh: fetchData }
 }
