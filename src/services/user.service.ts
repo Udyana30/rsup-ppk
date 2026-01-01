@@ -32,6 +32,7 @@ export const userService = {
     let query = client
       .from('profiles')
       .select('*', { count: 'exact' })
+      .eq('is_super_admin', false)
 
     // Apply filters
     if (filters.search) {
@@ -76,6 +77,7 @@ export const userService = {
     const { data, error } = await client
       .from('profiles')
       .select('*')
+      .eq('is_super_admin', false)
       .order('created_at', { ascending: false })
 
     if (error) throw error
