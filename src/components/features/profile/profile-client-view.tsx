@@ -57,7 +57,7 @@ export function ProfileClientView({ profile }: ProfileClientViewProps) {
 
   return (
     <>
-      <div className="h-full overflow-y-auto max-w-5xl mx-auto space-y-8 pb-10 pr-2">
+      <div className="h-full overflow-y-auto max-w-5xl mx-auto space-y-8 p-10">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Pengaturan Profil</h1>

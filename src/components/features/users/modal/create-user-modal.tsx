@@ -97,7 +97,10 @@ export function CreateUserModal({ currentUser, onSuccess }: CreateUserModalProps
           <Input
             required
             value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^a-zA-Z\s.]/g, '')
+              setFullName(val)
+            }}
             placeholder="Dr. Nama Lengkap"
             className="pl-11 h-12 border-gray-300 bg-white text-base font-medium text-gray-900 focus:border-[#41A67E] focus:ring-[#41A67E]"
           />

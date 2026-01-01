@@ -1,17 +1,105 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database.types'
+import { 
+  PaginationParams, 
+  PaginatedResponse, 
+  DocumentFilterParams,
+  PpkDocument 
+} from '@/types'
+import { PAGINATION } from '@/constants/pagination-constants'
 
 type DocumentInsert = Database['public']['Tables']['ppk_documents']['Insert']
 type DocumentUpdate = Database['public']['Tables']['ppk_documents']['Update']
 
 export const documentService = {
+  async getDocumentsPaginated(
+    client: SupabaseClient<Database>,
+    pagination: PaginationParams = { 
+      page: PAGINATION.DEFAULT_PAGE, 
+      pageSize: PAGINATION.PAGE_SIZE 
+    },
+    filters: DocumentFilterParams = {}
+  ): Promise<PaginatedResponse<PpkDocument>> {
+    const from = (pagination.page - 1) * pagination.pageSize
+    const to = from + pagination.pageSize - 1
+
+    const needsGroupFilter = !!filters.groupId
+    const needsTypeFilter = !!filters.typeId
+    
+    let selectQuery = '*'
+    if (needsGroupFilter) {
+      selectQuery += ', medical_staff_groups!inner (name, deleted_at)'
+    } else {
+      selectQuery += ', medical_staff_groups (name)'
+    }
+    
+    if (needsTypeFilter) {
+      selectQuery += ', ppk_types!inner (name, deleted_at)'
+    } else {
+      selectQuery += ', ppk_types (name)'
+    }
+    
+    selectQuery += ', profiles (full_name)'
+
+    let query = client
+      .from('ppk_documents')
+      .select(selectQuery, { count: 'exact' })
+
+    if (needsGroupFilter && filters.groupId) {
+      query = query
+        .is('medical_staff_groups.deleted_at', null)
+        .eq('medical_staff_groups.name', filters.groupId)
+    }
+    
+    if (needsTypeFilter && filters.typeId) {
+      query = query
+        .is('ppk_types.deleted_at', null)
+        .eq('ppk_types.name', filters.typeId)
+    }
+
+    if (filters.search) {
+      query = query.ilike('title', `%${filters.search}%`)
+    }
+    if (filters.status) {
+      const isActive = filters.status === 'active'
+      query = query.eq('is_active', isActive)
+    }
+    if (filters.startDate) {
+      query = query.gte('created_at', filters.startDate)
+    }
+    if (filters.endDate) {
+      query = query.lte('created_at', filters.endDate)
+    }
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) throw error
+
+    const totalCount = count || 0
+    const totalPages = Math.ceil(totalCount / pagination.pageSize)
+
+    return {
+      data: (data || []) as unknown as PpkDocument[],
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        totalCount,
+        totalPages,
+        hasNextPage: pagination.page < totalPages,
+        hasPreviousPage: pagination.page > 1,
+      },
+    }
+  },
+
   async getDocuments(client: SupabaseClient<Database>) {
     return client
       .from('ppk_documents')
       .select(`
         *,
         medical_staff_groups (name),
-        ppk_types (name, code),
+        ppk_types (name),
         profiles (full_name)
       `)
       .order('created_at', { ascending: false })
@@ -23,7 +111,7 @@ export const documentService = {
       .select(`
         *,
         medical_staff_groups (name),
-        ppk_types (name, code),
+        ppk_types (name),
         profiles (full_name)
       `)
       .eq('id', id)

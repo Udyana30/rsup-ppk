@@ -4,9 +4,11 @@ import { useState, FormEvent } from 'react'
 import { useUpload } from '@/hooks/storage/use-upload'
 import { useCategories } from '@/hooks/master/use-categories'
 import { useAuth } from '@/hooks/auth/use-auth'
+import { usePdfUpload } from '@/hooks/documents/use-pdf-upload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, Calendar } from 'lucide-react'
+import { PdfFileUpload } from '@/components/features/documents/pdf-file-upload'
+import { Loader2, ChevronDown, CheckCircle2, XCircle, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface UploadFormModalProps {
@@ -17,8 +19,8 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
   const { uploadDocument, isUploading } = useUpload()
   const { groups, types } = useCategories()
   const { user } = useAuth()
+  const { file, fileError, validatePdfFile, handleFileChange, handleDragOver, handleDrop } = usePdfUpload()
 
-  const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [validationDate, setValidationDate] = useState('')
@@ -29,6 +31,11 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!file || !user) return
+
+    // Validasi ulang file
+    if (!validatePdfFile(file)) {
+      return
+    }
 
     try {
       await uploadDocument(file, {
@@ -51,7 +58,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Judul Dokumen PPK</label>
+        <label className="block text-sm font-medium text-gray-900">Judul Dokumen PPK</label>
         <Input
           required
           value={title}
@@ -62,7 +69,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Deskripsi (Opsional)</label>
+        <label className="block text-sm font-medium text-gray-900">Deskripsi (Opsional)</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -74,7 +81,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Tanggal Pengesahan</label>
+          <label className="block text-sm font-medium text-gray-900">Tanggal Pengesahan</label>
           <div className="relative">
             <Input
               type="date"
@@ -88,7 +95,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Kelompok Staff Medis</label>
+          <label className="block text-sm font-medium text-gray-900">Kelompok Staff Medis</label>
           <div className="relative">
             <select
               required
@@ -106,7 +113,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Jenis Dokumen</label>
+          <label className="block text-sm font-medium text-gray-900">Jenis Dokumen</label>
           <div className="relative">
             <select
               required
@@ -122,7 +129,7 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Status Dokumen</label>
+          <label className="block text-sm font-medium text-gray-900">Status Dokumen</label>
           <div
             onClick={() => setIsActive(!isActive)}
             className={cn(
@@ -138,42 +145,21 @@ export function UploadFormModal({ onSuccess }: UploadFormModalProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Upload File PDF</label>
-        <div className="relative rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition-all hover:border-[#41A67E] hover:bg-[#41A67E]/5">
-          <Input
-            type="file"
-            accept="application/pdf"
-            required
-            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-          <div className="relative z-0 flex flex-col items-center">
-            <div className="mb-3 rounded-full bg-white p-3 shadow-sm ring-1 ring-gray-200">
-              <CloudUpload className="h-6 w-6 text-[#41A67E]" />
-            </div>
-            <div>
-              <span className="text-sm font-medium text-[#41A67E] underline-offset-2 group-hover:underline">Klik untuk pilih file</span>
-              <span className="text-sm text-gray-600"> atau drag and drop</span>
-            </div>
-            <p className="mt-2 text-xs text-gray-500">
-              {file ? (
-                <span className="inline-flex items-center rounded-md bg-[#41A67E]/10 px-2 py-1 text-[#41A67E] font-medium">
-                  {file.name}
-                </span>
-              ) : (
-                'Maksimal ukuran file 10MB (PDF)'
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
+      <PdfFileUpload
+        file={file}
+        fileError={fileError}
+        required={true}
+        mode="upload"
+        onFileChange={handleFileChange}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      />
 
       <div className="flex justify-end pt-4">
         <Button
           type="submit"
-          disabled={isUploading}
-          className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
+          disabled={isUploading || !!fileError}
+          className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isUploading ? (
             <>

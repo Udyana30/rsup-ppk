@@ -1,13 +1,11 @@
 'use client'
 
-import { Search, Filter, ArrowUpDown } from 'lucide-react'
+import { Search, ArrowUpDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 interface MasterDataFiltersProps {
     search: string
     setSearch: (val: string) => void
-    statusFilter: string
-    setStatusFilter: (val: string) => void
     sortBy: string
     setSortBy: (val: string) => void
 }
@@ -15,8 +13,6 @@ interface MasterDataFiltersProps {
 export function MasterDataFilters({
     search,
     setSearch,
-    statusFilter,
-    setStatusFilter,
     sortBy,
     setSortBy
 }: MasterDataFiltersProps) {
@@ -32,18 +28,6 @@ export function MasterDataFilters({
                 />
             </div>
             <div className="flex gap-3">
-                <div className="relative min-w-[160px]">
-                    <select
-                        className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E] cursor-pointer"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                        <option value="">Semua Status</option>
-                        <option value="active">Aktif</option>
-                        <option value="inactive">Non-Aktif</option>
-                    </select>
-                    <Filter className="absolute right-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" />
-                </div>
                 <div className="relative min-w-[160px]">
                     <select
                         className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-[#41A67E] focus:outline-none focus:ring-1 focus:ring-[#41A67E] cursor-pointer"

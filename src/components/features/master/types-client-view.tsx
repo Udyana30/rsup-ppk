@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { MasterDataTable } from './master-data-table'
+import { MasterDataView } from './master-data-view'
 import { TypeFormModal } from './modal/type-form-modal'
 import { useMasterTypes } from '@/hooks/master/use-master-types'
 import { useAdmin } from '@/hooks/auth/use-admin'
@@ -45,7 +45,7 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
     setData((prev) => prev.filter((item) => item.id !== deleteId))
 
     const success = await deleteType(deleteId)
-    
+
     if (success) {
       setDeleteId(null)
     } else {
@@ -59,14 +59,14 @@ export function TypesClientView({ initialData }: { initialData: PpkType[] }) {
 
   return (
     <>
-      <MasterDataTable
+      <MasterDataView
         title="Jenis Dokumen PPK"
         data={activeData}
         search={search}
         setSearch={setSearch}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={(id) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Kode"
         isAdmin={!!isAdmin && !isAdminLoading}

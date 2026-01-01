@@ -102,7 +102,7 @@ export function DocumentHistoryModal({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
         {activeTab === 'versions' ? (
           history.length === 0 ? (
             <EmptyState message="Tidak ada riwayat versi." />
@@ -111,87 +111,95 @@ export function DocumentHistoryModal({
               <div
                 key={item.id}
                 className={cn(
-                  "group relative rounded-xl border p-4 transition-all hover:shadow-sm",
+                  "group relative rounded-xl border p-3 transition-all hover:shadow-sm",
                   item.status === 'active'
                     ? "border-[#41A67E]/30 bg-[#41A67E]/5"
                     : "border-gray-100 bg-white hover:border-[#41A67E]/30"
                 )}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1.5">
+                <div className="flex flex-col gap-2">
+                  {/* Bagian Atas: Versi dan Status */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
                         className={cn(
+                          "h-5 px-2 text-[10px]",
                           item.status === 'active'
                             ? "bg-[#41A67E] text-white border-[#41A67E]"
-                            : "bg-blue-50 text-blue-700 border-blue-100"
+                            : "bg-gray-100 text-gray-600 border-gray-200"
                         )}
                       >
                         Versi {item.version}
                       </Badge>
-                      <span className="text-sm font-medium text-gray-900">{item.title}</span>
-                      {item.status === 'active' && (
+                      {item.status === 'active' ? (
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-[#41A67E] bg-white px-2 py-0.5 rounded-full border border-[#41A67E]/20">
                           <CheckCircle2 className="h-3 w-3" />
                           Active
                         </span>
-                      )}
-                      {item.status === 'archived' && (
+                      ) : (
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
                           <Archive className="h-3 w-3" />
                           Archived
                         </span>
                       )}
                     </div>
+                  </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>
-                          {item.updated_at
-                            ? new Date(item.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : '-'
-                          }
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <User className="h-3.5 w-3.5" />
-                        <span>{item.uploaded_by_name}</span>
-                      </div>
+                  {/* Tengah: Nama dan Action Buttons */}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-gray-900 line-clamp-1 flex-1" title={item.title}>
+                      {item.title}
+                    </span>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <a
+                        href={item.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                        title="Download File"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </a>
+
+                      {item.status === 'archived' && (
+                        <>
+                          <button
+                            onClick={() => setVersionToRestore(item.id)}
+                            className="p-1.5 rounded-lg text-orange-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                            title="Restore Versi Ini"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => setVersionToDelete(item.id)}
+                            className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                            title="Hapus Versi Ini"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <a
-                      href={item.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
-                      title="Download File"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
-
-                    {item.status === 'archived' && (
-                      <>
-                        <button
-                          onClick={() => setVersionToRestore(item.id)}
-                          className="p-2 rounded-lg text-orange-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                          title="Restore Versi Ini"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          onClick={() => setVersionToDelete(item.id)}
-                          className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                          title="Hapus Versi Ini"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
+                  {/* Akhir: Informasi Lainnya */}
+                  <div className="flex items-center gap-3 text-[10px] text-gray-500 pt-1 border-t border-gray-100/50 mt-0.5">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>
+                        {item.updated_at
+                          ? new Date(item.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      <span>{item.uploaded_by_name}</span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -15,7 +15,7 @@ export type Profile = Database['public']['Tables']['profiles']['Row'] & {
 
 export type PpkDocument = Database['public']['Tables']['ppk_documents']['Row'] & {
   medical_staff_groups?: Pick<MedicalStaffGroup, 'name'> | null
-  ppk_types?: Pick<PpkType, 'name' | 'code'> | null
+  ppk_types?: Pick<PpkType, 'name'> | null
   profiles?: Pick<Profile, 'full_name'> | null
 }
 
@@ -40,4 +40,48 @@ export interface UploadResponse {
   public_id: string
   format: string
   bytes: number
+}
+
+/**
+ * Parameter untuk pagination request
+ */
+export interface PaginationParams {
+  page: number
+  pageSize: number
+}
+
+/**
+ * Response wrapper untuk data yang di-paginate
+ */
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: {
+    page: number
+    pageSize: number
+    totalCount: number
+    totalPages: number
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+  }
+}
+
+/**
+ * Parameter filter untuk dokumen
+ */
+export interface DocumentFilterParams {
+  search?: string
+  groupId?: string
+  typeId?: string
+  status?: string
+  startDate?: string
+  endDate?: string
+}
+
+/**
+ * Parameter filter untuk user
+ */
+export interface UserFilterParams {
+  search?: string
+  role?: string
+  status?: string
 }

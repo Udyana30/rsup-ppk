@@ -4,9 +4,11 @@ import { useState, FormEvent } from 'react'
 import { useCategories } from '@/hooks/master/use-categories'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { useAuth } from '@/hooks/auth/use-auth'
+import { usePdfUpload } from '@/hooks/documents/use-pdf-upload'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, CloudUpload, ChevronDown, CheckCircle2, XCircle, FileCheck, FileText, Calendar, GitBranch } from 'lucide-react'
+import { PdfFileUpload } from '@/components/features/documents/pdf-file-upload'
+import { Loader2, ChevronDown, CheckCircle2, XCircle, FileText, Calendar, GitBranch } from 'lucide-react'
 import { PpkDocument } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -21,13 +23,17 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
   const { groups, types } = useCategories()
   const { editMetadata, createNewVersion, isProcessing } = useDocumentActions()
   const { user } = useAuth()
+  const { file, fileError, validatePdfFile, handleFileChange, handleDragOver, handleDrop } = usePdfUpload()
 
-  const [file, setFile] = useState<File | null>(null)
+  // Validasi apakah kategori masih ada di list aktif (belum di-soft delete)
+  const isGroupValid = groups.some(g => g.id === document.group_id)
+  const isTypeValid = types.some(t => t.id === document.type_id)
+
   const [title, setTitle] = useState(document.title)
   const [description, setDescription] = useState(document.description || '')
   const [validationDate, setValidationDate] = useState(document.validation_date || '')
-  const [groupId, setGroupId] = useState(document.group_id || '')
-  const [typeId, setTypeId] = useState(document.type_id || '')
+  const [groupId, setGroupId] = useState(isGroupValid ? document.group_id || '' : '')
+  const [typeId, setTypeId] = useState(isTypeValid ? document.type_id || '' : '')
   const [isActive, setIsActive] = useState(document.is_active)
 
   const currentVersion = document.version || '1'
@@ -36,6 +42,10 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
+
+    if (file && !validatePdfFile(file)) {
+      return
+    }
 
     const formData = {
       title,
@@ -90,8 +100,8 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
           <label className="block text-sm font-medium text-gray-900">Versi</label>
           <div className={cn(
             "flex h-11 w-full items-center justify-center gap-2 rounded-md border text-sm font-bold",
-            mode === 'version' 
-              ? "border-blue-200 bg-blue-50 text-blue-700" 
+            mode === 'version'
+              ? "border-blue-200 bg-blue-50 text-blue-700"
               : "border-gray-200 bg-gray-100 text-gray-500"
           )}>
             {mode === 'version' ? (
@@ -141,10 +151,14 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
               value={groupId}
               onChange={(e) => setGroupId(e.target.value)}
             >
+              {!isGroupValid && <option value="" disabled>-</option>}
               {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-3 h-5 w-5 text-gray-500 pointer-events-none" />
           </div>
+          {!isGroupValid && document.group_id && (
+            <p className="text-xs text-amber-600">Kategori tidak tersedia</p>
+          )}
         </div>
       </div>
 
@@ -158,10 +172,14 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
               value={typeId}
               onChange={(e) => setTypeId(e.target.value)}
             >
+              {!isTypeValid && <option value="" disabled>-</option>}
               {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-3 h-5 w-5 text-gray-500 pointer-events-none" />
           </div>
+          {!isTypeValid && document.type_id && (
+            <p className="text-xs text-amber-600">Jenis tidak tersedia</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -171,7 +189,7 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
             className={cn(
               "flex h-11 w-full cursor-pointer items-center justify-between rounded-md border px-4 transition-all",
               isActive
-                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]" 
+                ? "border-[#41A67E] bg-[#41A67E]/5 text-[#41A67E]"
                 : "border-gray-300 bg-gray-50 text-gray-500"
             )}
           >
@@ -181,63 +199,22 @@ export function EditDocumentModal({ document, mode, nextVersion, onSuccess }: Ed
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-900">
-          {mode === 'version' ? 'Upload File Versi Baru' : 'File Dokumen'}
-        </label>
-
-        <div className={cn(
-          "relative rounded-xl border-2 border-dashed p-6 text-center transition-all",
-          mode === 'version' && !file
-            ? "border-orange-300 bg-orange-50 hover:bg-orange-100"
-            : "border-gray-300 bg-gray-50 hover:border-[#41A67E] hover:bg-[#41A67E]/5"
-        )}>
-          <Input
-            type="file"
-            accept="application/pdf"
-            required={mode === 'version'}
-            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-
-          <div className="relative z-0 flex flex-col items-center gap-2">
-            <div className={cn(
-              "rounded-full p-3 shadow-sm ring-1",
-              file ? "bg-[#41A67E]/10 ring-[#41A67E]/20" : "bg-white ring-gray-200"
-            )}>
-              {file ? (
-                <CloudUpload className="h-6 w-6 text-[#41A67E]" />
-              ) : (
-                <FileCheck className="h-6 w-6 text-gray-400" />
-              )}
-            </div>
-
-            <div className="flex flex-col items-center">
-              {file ? (
-                <>
-                  <span className="text-sm font-bold text-[#41A67E]">{file.name}</span>
-                  <span className="text-xs text-gray-500">File baru terpilih • Klik untuk ganti</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-sm font-medium text-gray-900 line-clamp-1 max-w-[300px]">
-                    {existingFileName}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {mode === 'version' ? 'Klik area ini untuk upload file baru' : 'File saat ini tersimpan • Klik untuk mengganti'}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PdfFileUpload
+        file={file}
+        fileError={fileError}
+        existingFileName={existingFileName}
+        required={mode === 'version'}
+        mode={mode}
+        onFileChange={handleFileChange}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      />
 
       <div className="flex justify-end pt-4">
         <Button
           type="submit"
-          disabled={isProcessing}
-          className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b]"
+          disabled={isProcessing || !!fileError}
+          className="h-11 min-w-[150px] bg-[#41A67E] text-sm font-bold text-white shadow-sm transition-all hover:bg-[#368f6b] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProcessing ? (
             <>

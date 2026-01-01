@@ -6,6 +6,8 @@ import { StatsCard } from '@/components/features/dashboard/stats-card'
 import { RecentDocuments } from '@/components/features/dashboard/recent-documents'
 import { RecentUsers } from '@/components/features/dashboard/recent-users'
 import { FileText, Users, Clock, Activity, Calendar } from 'lucide-react'
+import { DocumentDistributionChart } from '@/components/features/dashboard/document-distribution-chart'
+import { UserDistributionChart } from '@/components/features/dashboard/user-distribution-chart'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -48,7 +50,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 px-6">
+    <div className="flex-1 h-full overflow-y-auto p-4 md:p-8 space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h1>
@@ -87,7 +89,7 @@ export default async function DashboardPage() {
           href="/dashboard/users"
         />
         <StatsCard
-          title="Kelompok Medis"
+          title="Kelompok Staf Medis"
           value={groups.length}
           trend="Master Data"
           trendUp={true}
@@ -95,7 +97,7 @@ export default async function DashboardPage() {
           href="/dashboard/master/groups"
         />
         <StatsCard
-          title="Tipe Dokumen"
+          title="Jenis Dokumen"
           value={types.length}
           trend="Master Data"
           trendUp={true}
@@ -104,11 +106,13 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-7">
-        <div className="lg:col-span-4 space-y-6">
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3 space-y-4">
+          <DocumentDistributionChart documents={documents} groups={groups} types={types} />
           <RecentDocuments documents={documents} />
         </div>
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
+          <UserDistributionChart users={users} />
           <RecentUsers users={users} currentUser={currentUser} />
         </div>
       </div>

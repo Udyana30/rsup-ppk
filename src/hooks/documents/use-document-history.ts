@@ -56,15 +56,20 @@ export function useDocumentHistory(documentId: string) {
         version: v.version,
         title: v.title,
         file_url: v.file_url,
-        updated_at: v.archived_at, // Use archived_at as the "timestamp" for history view
+        updated_at: v.archived_at,
         archived_at: v.archived_at,
         uploaded_by_name: v.profiles?.full_name || 'System',
         status: 'archived',
         original_data: v
       }))
 
+      // Filter out archived versions that match the active version to avoid duplicates
+      const filteredArchivedItems = archivedHistoryItems.filter(
+        item => item.version !== activeHistoryItem.version
+      )
+
       // Combine and sort by version number descending
-      const allHistory = [activeHistoryItem, ...archivedHistoryItems].sort((a, b) => {
+      const allHistory = [activeHistoryItem, ...filteredArchivedItems].sort((a, b) => {
         const verA = parseFloat(a.version)
         const verB = parseFloat(b.version)
         return verB - verA

@@ -1,22 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { Profile } from '@/types'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { useUserActions } from '@/hooks/users/use-user-actions'
-import { useClickOutside } from '@/hooks/ui/use-click-outside'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 
-const EditUserModal = dynamic(() =>
-  import('@/components/features/users/modal/edit-user-modal').then(mod => mod.EditUserModal)
-)
-
-const Modal = dynamic(() =>
-  import('@/components/ui/modal').then(mod => mod.Modal)
-)
+const Modal = dynamic(() => import('@/components/ui/modal').then(mod => mod.Modal))
+const EditUserModal = dynamic(() => import('@/components/features/users/modal/edit-user-modal').then(mod => mod.EditUserModal))
 
 interface RecentUsersProps {
   users: Profile[]
@@ -26,32 +19,23 @@ interface RecentUsersProps {
 export function RecentUsers({ users, currentUser }: RecentUsersProps) {
   const router = useRouter()
   const { deleteUser, isProcessing } = useUserActions()
-
   const [editingUser, setEditingUser] = useState<Profile | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-
-  const [menuState, setMenuState] = useState<{
-    id: string
-    top: number
-    left: number
-  } | null>(null)
-
-  const [mounted, setMounted] = useState(false)
-
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
-  useClickOutside(menuRef, () => setMenuState(null))
 
+  const recentUsers = users.filter(u => u.is_super_admin !== true).slice(0, 7)
+
+  // Close menu when clicking outside
   useEffect(() => {
-    setMounted(true)
-    const handleScroll = () => setMenuState(null)
-    const handleResize = () => setMenuState(null)
-
-    window.addEventListener('scroll', handleScroll, true)
-    window.addEventListener('resize', handleResize)
-
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
     return () => {
-      window.removeEventListener('scroll', handleScroll, true)
-      window.removeEventListener('resize', handleResize)
+      document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
 
@@ -64,141 +48,114 @@ export function RecentUsers({ users, currentUser }: RecentUsersProps) {
     }
   }
 
-  const toggleMenu = (e: React.MouseEvent, userId: string) => {
-    e.stopPropagation()
-    if (menuState?.id === userId) {
-      setMenuState(null)
-      return
-    }
-
-    const button = e.currentTarget as HTMLButtonElement
-    const rect = button.getBoundingClientRect()
-
-    setMenuState({
-      id: userId,
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.right + window.scrollX - 128 // 128px is w-32
-    })
-  }
-
-  const handleEdit = (e: React.MouseEvent, user: Profile) => {
-    e.stopPropagation()
-    setEditingUser(user)
-    setMenuState(null)
-  }
-
-  const handleDelete = (e: React.MouseEvent, userId: string) => {
-    e.stopPropagation()
-    setDeleteId(userId)
-    setMenuState(null)
-  }
-
   const canManageUser = (targetUser: Profile) => {
     if (!currentUser) return false
-
-    // Super admin can manage everyone
     if (currentUser.is_super_admin) return true
-
-    // Regular admin can only manage 'user' role, not other admins
-    if (currentUser.role === 'admin') {
-      return targetUser.role === 'user'
-    }
-
+    if (currentUser.role === 'admin' && targetUser.role === 'user') return true
     return false
   }
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <div className="border-b border-gray-100 px-6 py-4">
-        <h3 className="font-semibold text-gray-900">Users</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50/50 text-gray-500">
-            <tr>
-              <th className="px-6 py-3 font-medium">Name</th>
-              <th className="px-6 py-3 font-medium">Role</th>
-              <th className="px-6 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {users.slice(0, 6).map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#41A67E]/10 text-[#41A67E] font-semibold text-xs ring-2 ring-white">
-                      {user.full_name?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.full_name}</p>
-                      <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+    <>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col h-[400px] transition-all duration-300 hover:shadow-md">
+        <div className="flex items-center justify-between pl-6 pt-6 pb-2 shrink-0 border-b border-gray-50">
+          <h3 className="font-semibold text-gray-900 text-sm">Pengguna Terbaru</h3>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:none]">
+          <div className="space-y-2">
+            {recentUsers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <p className="text-xs">Belum ada user baru</p>
+              </div>
+            ) : (
+              recentUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-all duration-200 group border border-transparent hover:border-gray-100 hover:shadow-sm relative"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 font-medium text-xs group-hover:bg-[#41A67E] group-hover:text-white transition-colors duration-300 shadow-sm">
+                    {user.full_name?.charAt(0).toUpperCase() || '?'}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate text-xs group-hover:text-[#41A67E] transition-colors" title={user.full_name || ''}>
+                      {user.full_name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-[10px] text-gray-500 truncate max-w-[100px]">
+                        {user.username || '-'}
+                      </p>
+                      <div className={`text-[9px] px-2 py-0.5 rounded-full inline-block border ${user.role === 'admin'
+                        ? 'bg-purple-50 text-purple-700 border-purple-100'
+                        : 'bg-gray-50 text-gray-600 border-gray-100'
+                        }`}>
+                        {user.role === 'admin' ? 'Admin' : 'User'}
+                      </div>
                     </div>
                   </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={user.role === 'admin'
-                    ? "inline-flex items-center rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700"
-                    : "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700"
-                  }>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  {canManageUser(user) && (
-                    <button
-                      className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                      onClick={(e) => toggleMenu(e, user.id)}
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+                  <div className="text-right shrink-0 flex items-center gap-2">
+                    {/* Action Menu */}
+                    {canManageUser(user) && (
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenMenuId(openMenuId === user.id ? null : user.id)
+                          }}
+                          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+
+                        {openMenuId === user.id && (
+                          <div
+                            ref={menuRef}
+                            className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-200"
+                          >
+                            <button
+                              onClick={() => {
+                                setEditingUser(user)
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                setDeleteId(user.id)
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Hapus
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
-      {mounted && menuState && createPortal(
-        <div
-          ref={menuRef}
-          className="absolute z-[9999] w-32 rounded-lg border border-gray-100 bg-white shadow-lg py-1"
-          style={{
-            top: menuState.top,
-            left: menuState.left
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={(e) => {
-              const user = users.find(u => u.id === menuState.id)
-              if (user) handleEdit(e, user)
-            }}
-            className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <Pencil className="mr-2 h-3.5 w-3.5" />
-            Edit
-          </button>
-          <button
-            onClick={(e) => handleDelete(e, menuState.id)}
-            className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <Trash2 className="mr-2 h-3.5 w-3.5" />
-            Delete
-          </button>
-        </div>,
-        document.body
-      )}
-
-      {editingUser && currentUser && (
+      {/* Edit Modal */}
+      {editingUser && (
         <Modal
           isOpen={!!editingUser}
           onClose={() => setEditingUser(null)}
-          title="Edit Data User"
+          title="Edit Data Pengguna"
         >
           <EditUserModal
             user={editingUser}
-            currentUser={currentUser}
+            currentUser={currentUser!}
             onSuccess={() => {
               setEditingUser(null)
               router.refresh()
@@ -207,16 +164,17 @@ export function RecentUsers({ users, currentUser }: RecentUsersProps) {
         </Modal>
       )}
 
+      {/* Delete Confirmation */}
       <AlertDialog
         isOpen={!!deleteId}
-        title="Hapus User"
-        description="Yakin ingin menghapus user ini secara permanen? Akun yang dihapus tidak dapat dipulihkan."
+        title="Hapus Pengguna"
+        description="Yakin ingin menghapus pengguna ini secara permanen? Akun yang dihapus tidak dapat dipulihkan."
         confirmLabel="Hapus Permanen"
         variant="destructive"
         isProcessing={isProcessing}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteId(null)}
       />
-    </div>
+    </>
   )
 }

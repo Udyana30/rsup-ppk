@@ -16,7 +16,7 @@ import { EditDocumentModal } from '@/components/features/documents/modal/edit-do
 import { DocumentHistoryModal } from '@/components/features/documents/modal/document-history-modal'
 import {
   ArrowLeft, Calendar, FileText, User, Tag,
-  Pencil, Trash2, AlertCircle, Loader2, GitBranch, FileClock
+  Pencil, Trash2, AlertCircle, Loader2, GitBranch, FileClock, ExternalLink
 } from 'lucide-react'
 
 interface DocumentDetailViewProps {
@@ -77,8 +77,8 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
   }
 
   return (
-    <div className="flex h-[calc(100vh-100px)] flex-col gap-6 lg:flex-row">
-      <div className="flex w-full flex-col gap-6 lg:w-[400px] lg:shrink-0">
+    <div className="flex h-[calc(100vh-100px)] flex-col gap-6 lg:flex-row p-4 md:p-8">
+      <div className="flex w-full h-full flex-col gap-6 lg:w-[40%] lg:shrink-0">
         <Button
           variant="outline"
           onClick={() => router.back()}
@@ -88,104 +88,126 @@ export function DocumentDetailView({ documentId, initialDocument }: DocumentDeta
           Kembali ke List
         </Button>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <FileText className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-snug text-gray-900">{document.title}</h1>
-              <div className="mt-2 flex items-center gap-2">
-                <Badge variant={document.is_active ? 'success' : 'outline'}>
-                  {document.is_active ? 'Aktif' : 'Draft/Arsip'}
-                </Badge>
-                <Badge variant="default">Ver. {document.version || '1'}</Badge>
+        {/* Metadata Card - Full Height dengan Hidden Scrollbar */}
+        <div className="flex flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm pt-6">
+          <div
+            className="flex-1 overflow-y-auto px-6 pb-4 [&::-webkit-scrollbar]:hidden"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            <div className="mb-4 flex items-start gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold leading-snug text-gray-900">{document.title}</h1>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant={document.is_active ? 'success' : 'outline'}>
+                    {document.is_active ? 'Aktif' : 'Draft/Arsip'}
+                  </Badge>
+                  <Badge variant="default">Ver. {document.version || '1'}</Badge>
+                </div>
               </div>
             </div>
-          </div>
 
-          {document.description && (
-            <div className="mb-4 text-sm leading-relaxed text-gray-600">
-              {document.description}
-            </div>
-          )}
-
-          <div className="space-y-5 border-t border-gray-100 pt-5">
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase text-gray-400">Kategori KSM</span>
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <Tag className="h-4 w-4 text-gray-400" />
-                {document.medical_staff_groups?.name}
+            {document.description && (
+              <div className="mb-4 text-sm leading-relaxed text-gray-600">
+                {document.description}
               </div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase text-gray-400">Tanggal Pengesahan</span>
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                {document.validation_date
-                  ? new Date(document.validation_date).toLocaleDateString('id-ID', { dateStyle: 'long' })
-                  : '-'}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-bold uppercase text-gray-400">Diunggah Oleh</span>
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <User className="h-4 w-4 text-gray-400" />
-                {document.profiles?.full_name}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {!isAdminLoading && isAdmin && (
-            <Button
-              onClick={() => setModalMode('edit')}
-              disabled={isProcessing}
-              className="h-12 w-full justify-start gap-3 bg-[#41A67E] text-base font-bold text-white shadow-sm hover:bg-[#368f6b]"
-            >
-              <Pencil className="h-5 w-5" />
-              Edit Metadata
-            </Button>
-          )}
-
-          <div className={`grid ${(!isAdminLoading && isAdmin) ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
-            {!isAdminLoading && isAdmin && (
-              <Button
-                onClick={() => setModalMode('version')}
-                disabled={isProcessing}
-                className="h-20 flex-col gap-2 bg-blue-500 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
-              >
-                <GitBranch className="h-6 w-6" />
-                Update Versi
-              </Button>
             )}
 
-            <Button
-              onClick={() => setModalMode('history')}
-              disabled={isProcessing}
-              variant="outline"
-              className="h-20 flex-col gap-2 border-blue-100 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
-            >
-              <FileClock className="h-6 w-6" />
-              Lihat Riwayat
-            </Button>
+            <div className="space-y-5 border-t border-gray-100 pt-5">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase text-gray-400">Kategori KSM</span>
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <Tag className="h-4 w-4 text-gray-400" />
+                  {document.medical_staff_groups?.name}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase text-gray-400">Tanggal Pengesahan</span>
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  {document.validation_date
+                    ? new Date(document.validation_date).toLocaleDateString('id-ID', { dateStyle: 'long' })
+                    : '-'}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase text-gray-400">Diunggah Oleh</span>
+                <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                  <User className="h-4 w-4 text-gray-400" />
+                  {document.profiles?.full_name}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {!isAdminLoading && isAdmin && (
-            <Button
-              onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={isProcessing}
-              variant="destructive"
-              className="h-12 w-full justify-start gap-3 bg-red-50 text-base font-medium text-red-600 hover:bg-red-100 border border-red-100"
-            >
-              {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
-              Hapus Dokumen
-            </Button>
-          )}
+          {/* Sticky Action Buttons - Ukuran Lebih Kecil */}
+          <div className="border-t border-gray-100 bg-white p-4">
+            <div className="flex flex-col gap-2.5">
+              {!isAdminLoading && isAdmin && (
+                <Button
+                  onClick={() => setModalMode('edit')}
+                  disabled={isProcessing}
+                  className="h-11 w-full justify-start gap-3 bg-[#41A67E] text-sm font-bold text-white shadow-sm hover:bg-[#368f6b]"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit Metadata
+                </Button>
+              )}
+
+              <div className={`grid ${(!isAdminLoading && isAdmin) ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
+                {!isAdminLoading && isAdmin && (
+                  <Button
+                    onClick={() => setModalMode('version')}
+                    disabled={isProcessing}
+                    className="h-16 flex-col gap-1.5 bg-blue-500 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
+                  >
+                    <GitBranch className="h-5 w-5" />
+                    Update Versi
+                  </Button>
+                )}
+
+                <Button
+                  onClick={() => setModalMode('history')}
+                  disabled={isProcessing}
+                  variant="outline"
+                  className="h-16 flex-col gap-1.5 border-blue-100 bg-blue-50 text-xs font-medium text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                >
+                  <FileClock className="h-5 w-5" />
+                  Lihat Riwayat
+                </Button>
+              </div>
+
+              <Button
+                onClick={() => window.open(document.file_url, '_blank')}
+                variant="outline"
+                className="h-10 w-full justify-start gap-2.5 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-[#41A67E]/10 hover:text-[#41A67E] hover:border-[#41A67E]/30"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Preview Penuh
+              </Button>
+
+              {!isAdminLoading && isAdmin && (
+                <Button
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isProcessing}
+                  variant="outline"
+                  className="h-10 w-full justify-start gap-2.5 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                >
+                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Hapus Dokumen
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* PDF Viewer - 60% */}
       <div className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 shadow-inner">
         <object
           data={`${document.file_url}#toolbar=1`}

@@ -14,7 +14,6 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          is_active: boolean
           created_at: string
           deleted_at: string | null
         }
@@ -22,7 +21,6 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
-          is_active?: boolean
           created_at?: string
           deleted_at?: string | null
         }
@@ -30,7 +28,6 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
-          is_active?: boolean
           created_at?: string
           deleted_at?: string | null
         }
@@ -205,25 +202,19 @@ export interface Database {
         Row: {
           id: string
           name: string
-          code: string | null
           created_at: string
-          is_active: boolean
           deleted_at: string | null
         }
         Insert: {
           id?: string
           name: string
-          code?: string | null
           created_at?: string
-          is_active?: boolean
           deleted_at?: string | null
         }
         Update: {
           id?: string
           name?: string
-          code?: string | null
           created_at?: string
-          is_active?: boolean
           deleted_at?: string | null
         }
         Relationships: []

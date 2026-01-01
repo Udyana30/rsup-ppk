@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { MasterDataTable } from './master-data-table'
+import { MasterDataView } from './master-data-view'
 import { GroupFormModal } from './modal/group-form-modal'
 import { useMasterGroups } from '@/hooks/master/use-master-groups'
 import { useAdmin } from '@/hooks/auth/use-admin'
@@ -45,14 +45,14 @@ export function GroupsClientView({ initialData }: { initialData: MedicalStaffGro
 
   return (
     <>
-      <MasterDataTable
+      <MasterDataView
         title="Kelompok Staf Medis"
         data={data}
         search={search}
         setSearch={setSearch}
         onAdd={handleAdd}
         onEdit={handleEdit}
-        onDelete={(id) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
         isProcessing={isProcessing}
         extraColumnName="Deskripsi"
         isAdmin={!!isAdmin && !isAdminLoading}

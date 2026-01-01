@@ -1,20 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useDocumentActions } from '@/hooks/documents/use-document-actions'
 import { useAdmin } from '@/hooks/auth/use-admin'
-import { PpkDocument } from '@/types'
+import { PpkDocument, PaginatedResponse } from '@/types'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { DocumentFilters } from '@/components/features/documents/document-filters'
+import { DocumentTable } from '@/components/features/documents/document-table'
+import { Pagination } from '@/components/ui/pagination'
 import { exportDocumentsToExcel } from '@/lib/excel-exporter'
 import {
-    Plus, FileText, Pencil, Trash2, FilePlus, AlertCircle,
-    User, FileSpreadsheet, Loader2
+    Plus, FilePlus, AlertCircle,
+    FileSpreadsheet, Loader2
 } from 'lucide-react'
+
 
 const UploadFormModal = dynamic(() =>
     import('@/components/features/documents/modal/upload-form-modal').then(mod => mod.UploadFormModal)
@@ -29,57 +31,93 @@ const Modal = dynamic(() =>
 )
 
 interface DocumentsClientViewProps {
-    initialDocuments: PpkDocument[]
+    initialData: PaginatedResponse<PpkDocument>
 }
 
-export function DocumentsClientView({ initialDocuments }: DocumentsClientViewProps) {
+export function DocumentsClientView({ initialData }: DocumentsClientViewProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { deleteDocument, isProcessing } = useDocumentActions()
     const { isAdmin, isLoading: isAdminLoading } = useAdmin()
 
-    const [documents, setDocuments] = useState<PpkDocument[]>(initialDocuments)
-    const [search, setSearch] = useState('')
-    const [groupFilter, setGroupFilter] = useState('')
-    const [typeFilter, setTypeFilter] = useState('')
-    const [statusFilter, setStatusFilter] = useState('')
-    const [startDate, setStartDate] = useState('')
-    const [endDate, setEndDate] = useState('')
+    const [paginatedData, setPaginatedData] = useState(initialData)
+    const { data: documents, pagination } = paginatedData
+
+    const [search, setSearch] = useState(searchParams.get('search') || '')
+    const [groupFilter, setGroupFilter] = useState(searchParams.get('groupId') || '')
+    const [typeFilter, setTypeFilter] = useState(searchParams.get('typeId') || '')
+    const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || '')
+    const [startDate, setStartDate] = useState(searchParams.get('startDate') || '')
+    const [endDate, setEndDate] = useState(searchParams.get('endDate') || '')
 
     const [isCreateOpen, setIsCreateOpen] = useState(false)
     const [editingDoc, setEditingDoc] = useState<PpkDocument | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
     const [isExporting, setIsExporting] = useState(false)
 
+    // Track previous filter values untuk detect perubahan
+    const prevFiltersRef = useRef({ search, groupFilter, typeFilter, statusFilter, startDate, endDate })
+
     useEffect(() => {
-        setDocuments(initialDocuments)
-    }, [initialDocuments])
+        setPaginatedData(initialData)
+    }, [initialData])
 
-    const activeCount = documents.filter(doc => doc.is_active).length
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams.toString())
+        const prev = prevFiltersRef.current
 
-    const filteredDocs = documents.filter(doc => {
-        const docDate = new Date(doc.created_at)
-        const matchSearch = doc.title.toLowerCase().includes(search.toLowerCase())
-        const matchGroup = groupFilter ? doc.medical_staff_groups?.name === groupFilter : true
-        const matchType = typeFilter ? doc.ppk_types?.name === typeFilter : true
+        // Cek apakah ada filter yang berubah
+        const filterChanged =
+            prev.search !== search ||
+            prev.groupFilter !== groupFilter ||
+            prev.typeFilter !== typeFilter ||
+            prev.statusFilter !== statusFilter ||
+            prev.startDate !== startDate ||
+            prev.endDate !== endDate
 
-        let matchStatus = true
-        if (statusFilter === 'active') matchStatus = doc.is_active === true
-        if (statusFilter === 'inactive') matchStatus = doc.is_active === false
+        // Update params dengan filter values
+        if (search) params.set('search', search)
+        else params.delete('search')
 
-        let matchDate = true
-        if (startDate) matchDate = matchDate && docDate >= new Date(startDate)
-        if (endDate) {
-            const end = new Date(endDate)
-            end.setHours(23, 59, 59)
-            matchDate = matchDate && docDate <= end
+        if (groupFilter) params.set('groupId', groupFilter)
+        else params.delete('groupId')
+
+        if (typeFilter) params.set('typeId', typeFilter)
+        else params.delete('typeId')
+
+        if (statusFilter) params.set('status', statusFilter)
+        else params.delete('status')
+
+        if (startDate) params.set('startDate', startDate)
+        else params.delete('startDate')
+
+        if (endDate) params.set('endDate', endDate)
+        else params.delete('endDate')
+
+        // Hanya reset ke page 1 jika filter berubah
+        if (filterChanged) {
+            params.set('page', '1')
+            // Update ref dengan nilai baru
+            prevFiltersRef.current = { search, groupFilter, typeFilter, statusFilter, startDate, endDate }
         }
-        return matchSearch && matchGroup && matchType && matchStatus && matchDate
-    })
+
+        const newQuery = params.toString()
+        const currentQuery = searchParams.toString()
+
+        const timeoutId = setTimeout(() => {
+            if (newQuery !== currentQuery) {
+                router.push(`?${newQuery}`)
+                router.refresh()
+            }
+        }, 500)
+
+        return () => clearTimeout(timeoutId)
+    }, [search, groupFilter, typeFilter, statusFilter, startDate, endDate, router, searchParams])
 
     const handleExport = async () => {
         setIsExporting(true)
         try {
-            await exportDocumentsToExcel(filteredDocs)
+            await exportDocumentsToExcel(documents)
         } catch (error) {
             console.error(error)
         } finally {
@@ -91,47 +129,30 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
         if (!deleteId) return
         const success = await deleteDocument(deleteId)
         if (success) {
-            setDocuments(prev => prev.filter(doc => doc.id !== deleteId))
             setDeleteId(null)
             router.refresh()
         }
-    }
-
-    const handleEditClick = (e: React.MouseEvent, doc: PpkDocument) => {
-        e.stopPropagation()
-        setEditingDoc(doc)
     }
 
     const handleRefresh = () => {
         router.refresh()
     }
 
-    const colWidths = {
-        title: 'w-[30%]',
-        type: 'w-[10%]',
-        category: 'w-[15%]',
-        status: 'w-[15%]',
-        date: 'w-[15%]',
-        action: 'w-[15%]'
-    }
-
     return (
-        <div className="flex flex-col h-full space-y-4 px-6">
+        <div className="flex flex-col h-full space-y-4 p-4 md:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-gray-900">Dokumen PPK</h1>
                     <p className="text-gray-500">Kelola dan distribusikan panduan praktik klinis.</p>
                     <p className="mt-2 text-sm font-medium text-gray-700">
-                        Total Data Aktif: <span className="text-[#41A67E]">{activeCount}</span>
-                        <span className="mx-2 text-gray-300">|</span>
-                        Tampil: <span className="text-blue-600">{filteredDocs.length}</span>
+                        Total Data: <span className="text-[#41A67E]">{pagination.totalCount}</span>
                     </p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Button
                         onClick={handleExport}
-                        disabled={isExporting || filteredDocs.length === 0}
+                        disabled={isExporting || documents.length === 0}
                         className="group h-10 gap-2 border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
                     >
                         {isExporting ? (
@@ -162,7 +183,7 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                 />
             </div>
 
-            {filteredDocs.length === 0 ? (
+            {documents.length === 0 ? (
                 <div className="flex h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center shrink-0">
                     <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-50 mb-4">
                         {search || groupFilter ? <AlertCircle className="h-10 w-10 text-gray-400" /> : <FilePlus className="h-10 w-10 text-gray-400" />}
@@ -171,97 +192,24 @@ export function DocumentsClientView({ initialDocuments }: DocumentsClientViewPro
                     <p className="mt-2 max-w-sm text-gray-500">Silakan ubah filter atau tambah dokumen baru.</p>
                 </div>
             ) : (
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 text-gray-700 shadow-sm table w-full table-fixed">
-                            <tr>
-                                <th className={`px-6 py-4 font-bold ${colWidths.title}`}>Judul Dokumen</th>
-                                <th className={`px-6 py-4 font-bold ${colWidths.type}`}>Jenis</th>
-                                <th className={`px-6 py-4 font-bold ${colWidths.category}`}>Kategori</th>
-                                <th className={`px-6 py-4 font-bold ${colWidths.status}`}>Status</th>
-                                <th className={`px-6 py-4 font-bold ${colWidths.date}`}>Tanggal</th>
-                                <th className={`px-6 py-4 text-right font-bold ${colWidths.action}`}>
-                                    {isAdmin ? 'Aksi' : ''}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 block overflow-y-auto max-h-[calc(100vh-320px)] w-full">
-                            {filteredDocs.map((doc) => (
-                                <tr
-                                    key={doc.id}
-                                    onClick={() => router.push(`/dashboard/documents/${doc.id}`)}
-                                    className="group cursor-pointer hover:bg-blue-50/30 transition-colors table w-full table-fixed"
-                                >
-                                    <td className={`px-6 py-4 ${colWidths.title}`}>
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                                <FileText className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-semibold text-gray-900 line-clamp-1 max-w-[300px]">
-                                                    {doc.title}
-                                                </span>
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                    <User className="h-3 w-3" />
-                                                    {doc.profiles?.full_name || 'System'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className={`px-6 py-4 ${colWidths.type}`}>
-                                        {doc.ppk_types?.code ? (
-                                            <span className="font-mono font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-100 text-xs">
-                                                {doc.ppk_types.code}
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className={`px-6 py-4 text-gray-700 font-medium ${colWidths.category}`}>
-                                        {doc.medical_staff_groups?.name || '-'}
-                                    </td>
-                                    <td className={`px-6 py-4 ${colWidths.status}`}>
-                                        <Badge variant={doc.is_active ? 'success' : 'outline'}>
-                                            {doc.is_active ? 'Aktif' : 'Non-Aktif'}
-                                        </Badge>
-                                    </td>
-                                    <td className={`px-6 py-4 text-gray-600 ${colWidths.date}`}>
-                                        {new Date(doc.created_at).toLocaleDateString('id-ID', {
-                                            day: 'numeric', month: 'short', year: 'numeric'
-                                        })}
-                                    </td>
-                                    <td className={`px-6 py-4 text-right ${colWidths.action}`}>
-                                        {isAdmin && (
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={(e) => handleEditClick(e, doc)}
-                                                    className="h-8 w-8 p-0 text-[#41A67E] border-[#41A67E]"
-                                                    title="Edit Data"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setDeleteId(doc.id)
-                                                    }}
-                                                    className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 border-red-100"
-                                                    title="Hapus"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <>
+                    <DocumentTable
+                        documents={documents}
+                        isAdmin={isAdmin}
+                        onEdit={(doc) => setEditingDoc(doc)}
+                        onDelete={(id) => setDeleteId(id)}
+                    />
+
+                    {/* Pagination Component */}
+                    <Pagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.totalPages}
+                        totalCount={pagination.totalCount}
+                        pageSize={pagination.pageSize}
+                        hasNextPage={pagination.hasNextPage}
+                        hasPreviousPage={pagination.hasPreviousPage}
+                    />
+                </>
             )}
 
             {isCreateOpen && (
